@@ -1,0 +1,26 @@
+{
+    "name": "edvin/hbcontainer",
+    "description": "Lightweight container",
+    "type": "library",
+    "require": {
+		"php": "^7.1",
+        "psr/container": "^1.0"
+    },
+	"autoload": {
+		"psr-4": {
+			"HbLib\\Container\\": "src/"
+		}
+	},
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Edvin Hultberg",
+            "email": "hultberg@mittnett.net"
+        }
+    ],
+	"config": {
+		"platform": {
+			"php": "7.1.13"
+		}
+	}
+}
