@@ -2,9 +2,7 @@
 
 namespace HbLib\Container;
 
-use Psr\Container\ContainerExceptionInterface;
-
-class UnresolvedContainerException extends \Exception implements ContainerExceptionInterface
+class UnresolvedContainerException extends ContainerException
 {
 
 }

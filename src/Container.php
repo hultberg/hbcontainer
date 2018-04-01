@@ -64,6 +64,50 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Call the given function using the given parameters.
+     *
+     * @param callable $callable Function to call.
+     * @param array $parameters Parameters to use.
+     *
+     * @return mixed Result of the function.
+     *
+     * @throws InvokeException Base exception class for all the sub-exceptions below.
+     * @throws UnresolvedContainerException
+     * @throws \ReflectionException
+     */
+    public function call($callable, array $parameters = array())
+    {
+        if (is_array($callable)) {
+            list($class, $method) = $callable;
+            $reflectionClass = new \ReflectionClass($class);
+            $classInstance = null;
+
+            if (is_string($class)) {
+                $classInstance = $this->make($class);
+            } else if (is_object($class)) {
+                $classInstance = clone $class;
+            } else {
+                throw new InvokeException('Unable to invoke non-object instance.');
+            }
+
+            try {
+                $method = $reflectionClass->getMethod($method);
+            } catch (\ReflectionException $e) {
+                throw new InvokeException('Method ' . $method . ' does not exist on class', 0, $e);
+            }
+
+            return $method->invokeArgs($classInstance, $this->resolveParameters($method, $parameters));
+        }
+
+        if (is_string($callable) && function_exists($callable)) {
+            $reflectionFunction = new \ReflectionFunction($callable);
+            return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
+        }
+
+        throw new InvokeException('Unsupported format.');
+    }
+
+    /**
      * Build a class without cache.
      *
      * @param string $className
@@ -83,7 +127,9 @@ class Container implements ContainerInterface
                 throw new UnresolvedContainerException("Invalid factory for definition $className");
             }
 
-            return \call_user_func_array($factory, $this->resolveParameters(new \ReflectionFunction($factory), $parameters));
+            $reflectionFunction = new \ReflectionFunction($factory);
+            return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
+            //return \call_user_func_array($factory, $this->resolveParameters(new \ReflectionFunction(), $parameters));
         }
 
         $reflection = new \ReflectionClass($className);
