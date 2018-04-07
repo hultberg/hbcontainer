@@ -1,6 +1,10 @@
 # Changelog
 
-## (unreleased)
+## 1.2.0
+
+* Make `Container` resolvable.
+* Make `Container::resolveParameters` public.
+* Support anonymous functions in the Container.
 
 ## 1.1.0
 

@@ -1,0 +1,5 @@
+* text=auto
+*.php text
+*.md text
+*.json text
+*.lock text

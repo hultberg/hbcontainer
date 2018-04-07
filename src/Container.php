@@ -22,6 +22,10 @@ class Container implements ContainerInterface
     {
         $this->singletons = array();
         $this->definitions = $definitions;
+
+        // Register the container itself.
+        $this->singletons[self::class] = $this;
+        $this->singletons[ContainerInterface::class] = $this;
     }
 
     /**
@@ -66,7 +70,7 @@ class Container implements ContainerInterface
     /**
      * Call the given function using the given parameters.
      *
-     * @param callable $callable Function to call.
+     * @param callable|array|string|\Closure $callable Function to call.
      * @param array $parameters Parameters to use.
      *
      * @return mixed Result of the function.
@@ -99,7 +103,7 @@ class Container implements ContainerInterface
             return $method->invokeArgs($classInstance, $this->resolveParameters($method, $parameters));
         }
 
-        if (is_string($callable) && function_exists($callable)) {
+        if (is_callable($callable) || $callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
             $reflectionFunction = new \ReflectionFunction($callable);
             return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
         }
@@ -143,6 +147,8 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Resolve parameters of a reflection function.
+     *
      * @param \ReflectionFunctionAbstract $function
      * @param array $parameters
      *
@@ -150,7 +156,7 @@ class Container implements ContainerInterface
      *
      * @throws UnresolvedContainerException
      */
-    private function resolveParameters(\ReflectionFunctionAbstract $function, array $parameters = array()): array
+    public function resolveParameters(\ReflectionFunctionAbstract $function, array $parameters = array()): array
     {
         $resolvedParameters = array();
 
@@ -167,7 +173,7 @@ class Container implements ContainerInterface
                         continue;
                     } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
                         if (!$parameter->isOptional() && !$parameter->allowsNull()) {
-                            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . $parameter->getDeclaringClass()->getName());
+                            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($parameter->getDeclaringClass() ? $parameter->getDeclaringClass()->getName() : 'N/A'), 0, $e);
                         }
 
                         $resolvedParameters[$parameter->getName()] = null;
