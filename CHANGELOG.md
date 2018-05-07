@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+* Change method usages for `get` and `make`. `make` will now always provide a new instance, `get` will always provide a singleton instance.
+* Added `FactoryInterface`
+
 ## 1.2.0
 
 * Make `Container` resolvable.

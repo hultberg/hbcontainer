@@ -6,7 +6,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-class Container implements ContainerInterface
+class Container implements ContainerInterface, FactoryInterface
 {
     /**
      * @var array
@@ -26,11 +26,14 @@ class Container implements ContainerInterface
         // Register the container itself.
         $this->singletons[self::class] = $this;
         $this->singletons[ContainerInterface::class] = $this;
+        $this->definitions[FactoryInterface::class] = $this;
     }
 
     /**
-     * Finds an entry of the container by its identifier and returns it.
+     * Finds an entry of the container by its identifier and returns it. This will provide singleton instances.
      *
+     * @see make()
+     * 
      * @param string $id Identifier of the entry to look for.
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
@@ -39,19 +42,6 @@ class Container implements ContainerInterface
      * @return mixed Entry.
      */
     public function get($id)
-    {
-        return $this->make($id);
-    }
-
-    /**
-     * @param string $id
-     * @param array $parameters
-     *
-     * @return object
-     *
-     * @throws UnresolvedContainerException
-     */
-    public function make(string $id, array $parameters = array()): object
     {
         if (!isset($this->singletons[$id])) {
             // Attempt to build the $id class
@@ -114,7 +104,9 @@ class Container implements ContainerInterface
     /**
      * Build a class without cache.
      *
-     * @param string $className
+     * @see get()
+     * 
+     * @param string $id
      * @param array $parameters
      *
      * @return mixed
@@ -122,13 +114,13 @@ class Container implements ContainerInterface
      * @throws UnresolvedContainerException
      * @throws \ReflectionException
      */
-    private function build(string $className, array $parameters = array())
+    public function make(string $id, array $parameters = array())
     {
-        if (array_key_exists($className, $this->definitions)) {
-            $factory = $this->definitions[$className];
+        if (array_key_exists($id, $this->definitions)) {
+            $factory = $this->definitions[$id];
 
             if (!\is_callable($factory)) {
-                throw new UnresolvedContainerException("Invalid factory for definition $className");
+                throw new UnresolvedContainerException("Invalid factory for definition $id");
             }
 
             $reflectionFunction = new \ReflectionFunction($factory);
@@ -136,11 +128,11 @@ class Container implements ContainerInterface
             //return \call_user_func_array($factory, $this->resolveParameters(new \ReflectionFunction(), $parameters));
         }
 
-        $reflection = new \ReflectionClass($className);
+        $reflection = new \ReflectionClass($id);
         $constructor = $reflection->getConstructor();
 
         if ($constructor === null) {
-            return new $className(); // No constructor.
+            return new $id(); // No constructor.
         }
 
         return $reflection->newInstanceArgs($this->resolveParameters($constructor, $parameters));
