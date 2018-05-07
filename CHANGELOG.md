@@ -4,6 +4,7 @@
 
 * Change method usages for `get` and `make`. `make` will now always provide a new instance, `get` will always provide a singleton instance.
 * Added `FactoryInterface`
+* Project now has 100% test coverage and is verified to work on php 7.1 and 7.2
 
 ## 1.2.0
 
