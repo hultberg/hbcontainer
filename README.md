@@ -1,5 +1,7 @@
 # HbContainer
 
+[![Build Status](https://travis-ci.org/hultberg/hbcontainer.svg?branch=master)](https://travis-ci.org/hultberg/hbcontainer)
+
 A lightweight container.
 
 ## Usage
