@@ -36,8 +36,8 @@ class Container implements ContainerInterface, FactoryInterface
      * 
      * @param string $id Identifier of the entry to look for.
      *
-     * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
-     * @throws ContainerExceptionInterface Error while retrieving the entry.
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      *
      * @return mixed Entry.
      */
@@ -45,13 +45,7 @@ class Container implements ContainerInterface, FactoryInterface
     {
         if (!isset($this->singletons[$id])) {
             // Attempt to build the $id class
-            try {
-                $this->singletons[$id] = $this->build($id, $parameters);
-            } catch (\ReflectionException $e) {
-                throw new UnresolvedContainerException('Error while resolving ' . $id, 0, $e);
-            } catch (UnresolvedContainerException $e) {
-                throw new UnresolvedContainerException('Unable to resolve ' . $id, 0, $e);
-            }
+            $this->singletons[$id] = $this->make($id);
         }
 
         return $this->singletons[$id];
@@ -73,7 +67,6 @@ class Container implements ContainerInterface, FactoryInterface
     {
         if (is_array($callable)) {
             list($class, $method) = $callable;
-            $reflectionClass = new \ReflectionClass($class);
             $classInstance = null;
 
             if (is_string($class)) {
@@ -83,6 +76,9 @@ class Container implements ContainerInterface, FactoryInterface
             } else {
                 throw new InvokeException('Unable to invoke non-object instance.');
             }
+            
+            // $this->make() has already verified if class exists when its a string.
+            $reflectionClass = new \ReflectionClass($class);
 
             try {
                 $method = $reflectionClass->getMethod($method);
@@ -93,7 +89,7 @@ class Container implements ContainerInterface, FactoryInterface
             return $method->invokeArgs($classInstance, $this->resolveParameters($method, $parameters));
         }
 
-        if (is_callable($callable) || $callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
+        if (is_callable($callable) || (!is_string($callable) && $callable instanceof \Closure) || (is_string($callable) && function_exists($callable))) {
             $reflectionFunction = new \ReflectionFunction($callable);
             return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
         }
@@ -111,25 +107,40 @@ class Container implements ContainerInterface, FactoryInterface
      *
      * @return mixed
      *
+     * @throws NotFoundExceptionInterface
      * @throws UnresolvedContainerException
-     * @throws \ReflectionException
      */
     public function make(string $id, array $parameters = array())
     {
         if (array_key_exists($id, $this->definitions)) {
             $factory = $this->definitions[$id];
 
-            if (!\is_callable($factory)) {
-                throw new UnresolvedContainerException("Invalid factory for definition $id");
+            if (\is_callable($factory)) {
+                // de jure, this can throw ReflectionException. 
+                // de facto, this should not happen.
+                $reflectionFunction = new \ReflectionFunction($factory);
+                return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
             }
 
-            $reflectionFunction = new \ReflectionFunction($factory);
-            return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
-            //return \call_user_func_array($factory, $this->resolveParameters(new \ReflectionFunction(), $parameters));
+            // Return whatever...
+            return $factory;
         }
 
-        $reflection = new \ReflectionClass($id);
+        try {
+            $reflection = new \ReflectionClass($id);
+        } catch (\ReflectionException $e) {
+            throw new NotFoundException($e->getMessage(), 0, $e);
+        }
+        
         $constructor = $reflection->getConstructor();
+        
+        if ($reflection->isInterface()) {
+            throw new UnresolvedContainerException('Cant create an instance of an interface.');
+        }
+        
+        if ($reflection->isAbstract()) {
+            throw new UnresolvedContainerException('Cant create an instance of an abstract class.');
+        }
 
         if ($constructor === null) {
             return new $id(); // No constructor.
@@ -159,7 +170,7 @@ class Container implements ContainerInterface, FactoryInterface
             if (array_key_exists($parameter->getName(), $parameters)) {
                 $resolvedParameters[$parameter->getName()] = $parameters[$parameter->getName()];
             } else {
-                if ($type !== null && !$type->isBuiltin() && class_exists($type->getName())) {
+                if ($type !== null && !$type->isBuiltin() && $this->classNameExists($type->getName())) {
                     try {
                         $resolvedParameters[$parameter->getName()] = $this->make($type->getName());
                         continue;
@@ -179,6 +190,24 @@ class Container implements ContainerInterface, FactoryInterface
 
         return $resolvedParameters;
     }
+    
+    /**
+     * Determines if a classname exists. Able to handle interface, traits and classes.
+     *  
+     * @param string $className 
+     *
+     * @return bool   
+     */
+    private function classNameExists($className): bool
+    {
+        try {
+            new \ReflectionClass($className);
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+        
+        return true;
+    }
 
     /**
      * Returns true if the container can return an entry for the given identifier.
@@ -193,6 +222,12 @@ class Container implements ContainerInterface, FactoryInterface
      */
     public function has($id)
     {
-        return array_key_exists($id, $this->singletons);
+        try {
+            $this->make($id);
+        } catch (\ReflectionException|ContainerException $e) {
+            return false;
+        }
+        
+        return true;
     }
 }

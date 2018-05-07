@@ -1,0 +1,10 @@
+language: php
+
+php:
+    - '7.2'
+    - nightly
+    
+install: composer install --no-progress
+script: 
+    - vendor/bin/phpstan analyse -l 7 src tests
+    - vendor/bin/phpunit

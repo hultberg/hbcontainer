@@ -9,8 +9,4 @@ use Psr\Container\ContainerExceptionInterface;
 
 class ContainerException extends \Exception implements ContainerExceptionInterface
 {
-    public static function invalidInstanceToInvoke()
-    {
-
-    }
 }
