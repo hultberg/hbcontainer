@@ -2,6 +2,7 @@
 
 ## 1.5.0
 
+* Bug: Argument resolver did not resolve Definitions
 * Bug: Fix container not resolving parameters without a specific type that has default values.
 * Allow to declare parameters with the `get()` definition helper.
 * Internal refactoring and code splitting.
