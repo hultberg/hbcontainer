@@ -4,6 +4,13 @@
 
 A lightweight dependency injection container for all types of projects. Supports php 7.1 and newer.
 
+## Installation
+
+With composer:
+```
+composer require edvin/hbcontainer
+```
+
 ## Usage
 
 ```php
