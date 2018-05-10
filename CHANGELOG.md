@@ -1,14 +1,17 @@
 # Changelog
 
-## 1.5.0
+## (unreleased)
 
 * Bug: Argument resolver did not resolve Definitions
-* Bug: Fix container not resolving parameters without a specific type that has default values.
 * `DefinitionClass` now does not require a class name. When not specified, the container will find the class being resolved with the definition and use it. This allows us to write (in definition array): `MyClass::class => get()` and not `MyClass::class => get(MyClass::class)`
 * Add interface `InvokerInterface` for method `call` 
-* Allow to declare parameters with the `get()` definition helper.
-* Internal refactoring and code splitting.
 * Add interface `ArgumentResolverInterface` for the method `resolveArguments()`
+* Internal refactoring and code splitting.
+
+## 1.5.0
+
+* Bug: Fix container not resolving parameters without a specific type that has default values.
+* Allow to declare parameters with the `get()` definition helper.
 
 ## 1.4.0
 
