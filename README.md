@@ -9,10 +9,15 @@ A lightweight dependency injection container for all types of projects. Supports
 ```php
 <?php
 // Create definition configs
+
+interface MyInterface {}
+class MyClass implements MyInterface {}
+
 $definitions = array(
-    'session' => function() { return true; },
-    'lol' => function() { return false; },
-    'hello' => function() { return null; },
+    'session' => factory(function() { return true; }),
+    'lol' => factory(function() { return false; }),
+    'hello' => factory(function() { return null; }),
+    MyInterface::class => getClass(MyClass::class),
 );
 
 // Construct the container.
