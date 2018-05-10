@@ -3,12 +3,12 @@
 namespace HbLib\Container\Tests;
 
 use Psr\Container\NotFoundExceptionInterface;
-
 use HbLib\Container\Container;
 use HbLib\Container\InvokeException;
 use HbLib\Container\UnresolvedContainerException;
-
 use PHPUnit\Framework\TestCase;
+use function HbLib\Container\factory;
+use function HbLib\Container\getClass;
 
 class ContainerTest extends TestCase
 {
@@ -23,19 +23,51 @@ class ContainerTest extends TestCase
     public function testGetFactory()
     {
         $container = new Container([
+            'key' => factory(function() { return 12; }),
+        ]);
+        $this->assertEquals(12, $container->get('key'));
+    }
+    
+    public function testGetPreviousFactory()
+    {
+        $container = new Container([
             'key' => function() { return 12; },
         ]);
         $this->assertEquals(12, $container->get('key'));
     }
     
+    public function testGetObject()
+    {
+        $container = new Container([
+            'key' => getClass(Class1::class),
+        ]);
+        $this->assertInstanceOf(Class1::class, $container->get('key'));
+    }
+    
+    public function testMakeInvalidFactory()
+    {
+        $this->expectException(UnresolvedContainerException::class);            
+        $this->expectExceptionMessage('Unable to resolve definition key');
+        
+        $customDefinition = new \stdClass();
+        $customDefinition->type = 'factory';
+        $customDefinition->callable = '';
+        
+        $container = new Container([
+            'key' => $customDefinition,
+        ]);
+        
+        $container->get('key');
+    }
+    
     public function testGetIsSingleton()
     {
         $container = new Container([
-            'key' => function() {
+            'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
-            },
+            }),
         ]);
         
         $this->assertInstanceOf(\stdClass::class, $container->get('key'));
@@ -50,11 +82,11 @@ class ContainerTest extends TestCase
     public function testHas()
     {
         $container = new Container([
-            'key' => function() {
+            'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
-            },
+            }),
             'key1' => null,
         ]);
         
@@ -133,11 +165,11 @@ class ContainerTest extends TestCase
     public function testMakeNotSingleton()
     {
         $container = new Container([
-            'key' => function() {
+            'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
-            },
+            }),
         ]);
         
         $this->assertInstanceOf(\stdClass::class, $container->make('key'));

@@ -24,8 +24,8 @@ class Container implements ContainerInterface, FactoryInterface
         $this->definitions = $definitions;
 
         // Register the container itself.
-        $this->singletons[self::class] = $this;
-        $this->singletons[ContainerInterface::class] = $this;
+        $this->definitions[self::class] = $this;
+        $this->definitions[ContainerInterface::class] = $this;
         $this->definitions[FactoryInterface::class] = $this;
     }
 
@@ -70,7 +70,7 @@ class Container implements ContainerInterface, FactoryInterface
             $classInstance = null;
 
             if (is_string($class)) {
-                $classInstance = $this->make($class);
+                $classInstance = $this->get($class);
             } else if (is_object($class)) {
                 $classInstance = clone $class;
             } else {
@@ -114,12 +114,22 @@ class Container implements ContainerInterface, FactoryInterface
     {
         if (array_key_exists($id, $this->definitions)) {
             $factory = $this->definitions[$id];
-
-            if (\is_callable($factory)) {
-                // de jure, this can throw ReflectionException. 
-                // de facto, this should not happen.
-                $reflectionFunction = new \ReflectionFunction($factory);
-                return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
+            
+            if (is_callable($factory)) {
+                $factory = \HbLib\Container\factory($factory);
+            }
+            
+            if ($factory instanceof \stdClass && isset($factory->type, $factory->callable)) {
+                if ($factory->callable instanceof \ReflectionFunction) {
+                    switch ($factory->type) {
+                        case 'factory':
+                            // de jure, this can throw ReflectionException. 
+                            // de facto, this should not happen.
+                            return $factory->callable->invokeArgs($this->resolveParameters($factory->callable, $parameters));
+                    }
+                }
+                
+                throw new UnresolvedContainerException('Unable to resolve definition ' . $id);
             }
 
             // Return whatever...
@@ -172,7 +182,7 @@ class Container implements ContainerInterface, FactoryInterface
             } else {
                 if ($type !== null && !$type->isBuiltin() && $this->classNameExists($type->getName())) {
                     try {
-                        $resolvedParameters[$parameter->getName()] = $this->make($type->getName());
+                        $resolvedParameters[$parameter->getName()] = $this->get($type->getName());
                         continue;
                     } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
                         if (!$parameter->isOptional() && !$parameter->allowsNull()) {

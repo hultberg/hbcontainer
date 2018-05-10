@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+* Internal resolving of dependencies now call `get()` and will then use singletons.
+* Added function to create a defintion factory: `factory()`
+* Added function to create an alias to resolve a function: `getClass()`
+
 ## 1.3.0
 
 * Change method usages for `get` and `make`. `make` will now always provide a new instance, `get` will always provide a singleton instance.

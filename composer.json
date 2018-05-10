@@ -10,7 +10,8 @@
 		"psr-4": {
 			"HbLib\\Container\\": "src/",
 			"HbLib\\Container\\Tests\\": "tests/"
-		}
+		},
+        "files": ["src/functions.php"]
 	},
     "license": "MIT",
     "authors": [
