@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+* Bug: Fix container not resolving parameters without a specific type that has default values.
+* Allow to declare parameters with the `get()` definition helper.
+
 ## 1.4.0
 
 * Internal resolving of dependencies now call `get()` and will then use singletons.

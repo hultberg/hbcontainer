@@ -19,12 +19,34 @@ composer require edvin/hbcontainer
 
 interface MyInterface {}
 class MyClass implements MyInterface {}
+    
+class MyClass2 {
+    public $value;
+    
+    function __construct($value) {
+        $this->value = $value;
+    }
+}
+    
+class MyClass3 {
+    public $value;
+    
+    function __construct(MyInterface $value) {
+        $this->value = $value;
+    }
+}
 
 $definitions = array(
     'session' => factory(function() { return true; }),
     'lol' => factory(function() { return false; }),
     'hello' => factory(function() { return null; }),
-    MyInterface::class => getClass(MyClass::class),
+    MyInterface::class => get(MyClass::class),
+    'differentMyInterface' => factory(function() { return new MyClass(); }),
+    'myClass2' => get(MyClass::class)->parameter('value', 'someValue'),
+    
+    // The ->parameter part is not required as the container can resolve the parameters
+    // but it is here to display that you can tell the container to use another instance.
+    'myClass3' => get(MyClass3::class)->parameter('value', get('differentMyInterface')),
 );
 
 // Construct the container.

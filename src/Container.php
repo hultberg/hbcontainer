@@ -113,27 +113,28 @@ class Container implements ContainerInterface, FactoryInterface
     public function make(string $id, array $parameters = array())
     {
         if (array_key_exists($id, $this->definitions)) {
-            $factory = $this->definitions[$id];
+            $definition = $this->definitions[$id];
             
-            if (is_callable($factory)) {
-                $factory = \HbLib\Container\factory($factory);
+            if (is_callable($definition)) {
+                $definition = DefinitionFactory::fromCallable($definition);
             }
             
-            if ($factory instanceof \stdClass && isset($factory->type, $factory->callable)) {
-                if ($factory->callable instanceof \ReflectionFunction) {
-                    switch ($factory->type) {
-                        case 'factory':
-                            // de jure, this can throw ReflectionException. 
-                            // de facto, this should not happen.
-                            return $factory->callable->invokeArgs($this->resolveParameters($factory->callable, $parameters));
-                    }
+            if ($definition instanceof DefinitionFactory) {
+                return $definition->getFunction()->invokeArgs($this->resolveParameters($definition->getFunction(), $parameters));
+            }
+            
+            if ($definition instanceof DefinitionClass) {
+                $parameters = $definition->getParameters();
+                
+                if (count($parameters) > 0) {
+                    return $this->make($definition->getClassName(), $parameters);
                 }
                 
-                throw new UnresolvedContainerException('Unable to resolve definition ' . $id);
+                return $this->get($definition->getClassName());
             }
 
             // Return whatever...
-            return $factory;
+            return $definition;
         }
 
         try {
@@ -179,6 +180,8 @@ class Container implements ContainerInterface, FactoryInterface
 
             if (array_key_exists($parameter->getName(), $parameters)) {
                 $resolvedParameters[$parameter->getName()] = $parameters[$parameter->getName()];
+            } else if ($type === null && ($parameter->isOptional() || $parameter->allowsNull())) {
+                $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
             } else {
                 if ($type !== null && !$type->isBuiltin() && $this->classNameExists($type->getName())) {
                     try {

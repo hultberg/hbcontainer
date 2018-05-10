@@ -8,7 +8,7 @@ use HbLib\Container\InvokeException;
 use HbLib\Container\UnresolvedContainerException;
 use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
-use function HbLib\Container\getClass;
+use function HbLib\Container\get;
 
 class ContainerTest extends TestCase
 {
@@ -39,25 +39,55 @@ class ContainerTest extends TestCase
     public function testGetObject()
     {
         $container = new Container([
-            'key' => getClass(Class1::class),
+            'key' => get(Class1::class),
         ]);
         $this->assertInstanceOf(Class1::class, $container->get('key'));
     }
     
-    public function testMakeInvalidFactory()
+    public function testDefinitionClassWithParameters()
     {
-        $this->expectException(UnresolvedContainerException::class);            
-        $this->expectExceptionMessage('Unable to resolve definition key');
-        
-        $customDefinition = new \stdClass();
-        $customDefinition->type = 'factory';
-        $customDefinition->callable = '';
-        
         $container = new Container([
-            'key' => $customDefinition,
+            'key' => get(Class2OptionalValue::class)->parameter('value', 'lol'),
         ]);
         
-        $container->get('key');
+        $this->assertEquals('lol', $container->get('key')->value);
+    }
+    
+    public function testDefinitionClassWithParametersIsNotSingletons()
+    {
+        // Definitions with a parameter does not use a singleton.
+        $container = new Container([
+            'key1' => get(Class2OptionalValue::class),
+            'key2' => get(Class2OptionalValue::class)->parameter('value', 'lol'),
+        ]);
+        
+        $container->get('key2');
+        
+        $class2 = $container->get('key1');
+        $class2->value = 'singleton';
+        
+        $this->assertEquals('lol', $container->get('key2')->value);
+    }
+    
+    public function testDefinitionClassNoParameters()
+    {
+        $container = new Container([
+            'key' => get(Class2OptionalValue::class),
+        ]);
+        
+        $this->assertEquals('test', $container->get('key')->value);
+    }
+    
+    public function testDefinitionClassNoParametersIsSingletons()
+    {
+        $container = new Container([
+            'key' => get(Class2OptionalValue::class),
+        ]);
+        
+        $class2 = $container->get('key');
+        $class2->value = 'singleton';
+        
+        $this->assertEquals('singleton', $container->get('key')->value);
     }
     
     public function testGetIsSingleton()

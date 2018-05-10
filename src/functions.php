@@ -2,18 +2,14 @@
 
 namespace HbLib\Container {
     
-    function factory(callable $callable) {
-        $class = new \stdClass();
-        $class->type = 'factory';
-        $class->callable = new \ReflectionFunction($callable);
-        
-        return $class;
+    function factory(callable $callable): DefinitionFactory
+    {
+        return DefinitionFactory::fromCallable($callable);
     }
         
-    function getClass(string $class) {
-        return factory(function(\Psr\Container\ContainerInterface $container) use ($class) {
-            return $container->get($class);
-        });
+    function get(string $key): DefinitionClass
+    {
+        return new DefinitionClass($key);
     }
     
 }
