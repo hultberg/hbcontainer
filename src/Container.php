@@ -6,7 +6,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-class Container implements ContainerInterface, FactoryInterface
+class Container implements ContainerInterface, FactoryInterface, InvokerInterface, ArgumentResolverInterface
 {
     /**
      * @var array
@@ -24,16 +24,18 @@ class Container implements ContainerInterface, FactoryInterface
         $this->definitions = $definitions;
 
         // Register the container itself.
-        $this->definitions[self::class] = $this;
-        $this->definitions[ContainerInterface::class] = $this;
-        $this->definitions[FactoryInterface::class] = $this;
+        $this->singletons[self::class] = $this;
+        $this->singletons[ContainerInterface::class] = $this;
+        $this->singletons[FactoryInterface::class] = $this;
+        $this->singletons[InvokerInterface::class] = $this;
+        $this->singletons[ArgumentResolverInterface::class] = $this;
     }
 
     /**
      * Finds an entry of the container by its identifier and returns it. This will provide singleton instances.
      *
      * @see make()
-     * 
+     *
      * @param string $id Identifier of the entry to look for.
      *
      * @throws ContainerExceptionInterface
@@ -76,7 +78,7 @@ class Container implements ContainerInterface, FactoryInterface
             } else {
                 throw new InvokeException('Unable to invoke non-object instance.');
             }
-            
+
             // $this->make() has already verified if class exists when its a string.
             $reflectionClass = new \ReflectionClass($class);
 
@@ -86,12 +88,12 @@ class Container implements ContainerInterface, FactoryInterface
                 throw new InvokeException('Method ' . $method . ' does not exist on class', 0, $e);
             }
 
-            return $method->invokeArgs($classInstance, $this->resolveParameters($method, $parameters));
+            return $method->invokeArgs($classInstance, $this->resolveArguments($method, $parameters));
         }
 
         if (is_callable($callable) || (!is_string($callable) && $callable instanceof \Closure) || (is_string($callable) && function_exists($callable))) {
             $reflectionFunction = new \ReflectionFunction($callable);
-            return $reflectionFunction->invokeArgs($this->resolveParameters($reflectionFunction, $parameters));
+            return $reflectionFunction->invokeArgs($this->resolveArguments($reflectionFunction, $parameters));
         }
 
         throw new InvokeException('Unsupported format.');
@@ -101,7 +103,7 @@ class Container implements ContainerInterface, FactoryInterface
      * Build a class without cache.
      *
      * @see get()
-     * 
+     *
      * @param string $id
      * @param array $parameters
      *
@@ -114,63 +116,78 @@ class Container implements ContainerInterface, FactoryInterface
     {
         if (array_key_exists($id, $this->definitions)) {
             $definition = $this->definitions[$id];
-            
+
             if (is_callable($definition)) {
                 $definition = DefinitionFactory::fromCallable($definition);
             }
-            
-            if ($definition instanceof DefinitionFactory) {
-                return $definition->getFunction()->invokeArgs($this->resolveParameters($definition->getFunction(), $parameters));
-            }
-            
-            if ($definition instanceof DefinitionClass) {
-                $parameters = $definition->getParameters();
-                
-                if (count($parameters) > 0) {
-                    return $this->make($definition->getClassName(), $parameters);
-                }
-                
-                return $this->get($definition->getClassName());
+
+            if ($definition instanceof AbstractDefinition) {
+                return $this->resolveDefinition($definition, $id);
             }
 
             // Return whatever...
             return $definition;
         }
 
+        return $this->resolveClass($id, $parameters);
+    }
+
+    private function resolveDefinition(AbstractDefinition $definition, $requestedId)
+    {
+        if ($definition instanceof DefinitionFactory) {
+            $function = new \ReflectionFunction($definition->getClosure());
+            return $function->invokeArgs($this->resolveArguments($function));
+        }
+
+        if ($definition instanceof DefinitionClass) {
+            $className = $definition->getClassName() ?? $requestedId;
+
+            if (count($definition->getParameters()) > 0) {
+                return $this->resolveClass($className, $definition->getParameters());
+            }
+
+            return $this->get($className);
+        }
+
+        throw new \Exception('Unsupported definition');
+    }
+
+    private function resolveClass(string $className, array $parameters = [])
+    {
         try {
-            $reflection = new \ReflectionClass($id);
+            $reflection = new \ReflectionClass($className);
         } catch (\ReflectionException $e) {
             throw new NotFoundException($e->getMessage(), 0, $e);
         }
-        
+
         $constructor = $reflection->getConstructor();
-        
+
         if ($reflection->isInterface()) {
             throw new UnresolvedContainerException('Cant create an instance of an interface.');
         }
-        
+
         if ($reflection->isAbstract()) {
             throw new UnresolvedContainerException('Cant create an instance of an abstract class.');
         }
 
         if ($constructor === null) {
-            return new $id(); // No constructor.
+            return new $className(); // No constructor.
         }
 
-        return $reflection->newInstanceArgs($this->resolveParameters($constructor, $parameters));
+        return $reflection->newInstanceArgs(array_values($this->resolveArguments($constructor, $parameters)));
     }
 
     /**
      * Resolve parameters of a reflection function.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param array $parameters
+     * @param array $arguments
      *
      * @return array
      *
      * @throws UnresolvedContainerException
      */
-    public function resolveParameters(\ReflectionFunctionAbstract $function, array $parameters = array()): array
+    public function resolveArguments(\ReflectionFunctionAbstract $function, array $arguments = array()): array
     {
         $resolvedParameters = array();
 
@@ -178,8 +195,14 @@ class Container implements ContainerInterface, FactoryInterface
             // Identify if the type is a class we can attempt to build.
             $type = $parameter->getType();
 
-            if (array_key_exists($parameter->getName(), $parameters)) {
-                $resolvedParameters[$parameter->getName()] = $parameters[$parameter->getName()];
+            if (array_key_exists($parameter->getName(), $arguments)) {
+                $parameterValue = $arguments[$parameter->getName()];
+
+                if ($parameterValue instanceof AbstractDefinition) {
+                    $parameterValue = $this->resolveDefinition($parameterValue, $parameter->getName());
+                }
+
+                $resolvedParameters[$parameter->getName()] = $parameterValue;
             } else if ($type === null && ($parameter->isOptional() || $parameter->allowsNull())) {
                 $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
             } else {
@@ -203,13 +226,13 @@ class Container implements ContainerInterface, FactoryInterface
 
         return $resolvedParameters;
     }
-    
+
     /**
      * Determines if a classname exists. Able to handle interface, traits and classes.
-     *  
-     * @param string $className 
      *
-     * @return bool   
+     * @param string $className
+     *
+     * @return bool
      */
     private function classNameExists($className): bool
     {
@@ -218,7 +241,7 @@ class Container implements ContainerInterface, FactoryInterface
         } catch (\ReflectionException $e) {
             return false;
         }
-        
+
         return true;
     }
 
@@ -240,7 +263,7 @@ class Container implements ContainerInterface, FactoryInterface
         } catch (\ReflectionException|ContainerException $e) {
             return false;
         }
-        
+
         return true;
     }
 }

@@ -5,28 +5,28 @@ namespace HbLib\Container;
 class DefinitionClass extends AbstractDefinition
 {
     /**
-     * @var string
+     * @var string|null
      */
-    private $className;
-    
+    private $className = null;
+
     /**
      * @var array
      */
     private $parameters = [];
-    
+
     /**
      * @inheritDoc
      */
-    public function __construct($className, array $parameters = [])
+    public function __construct($className = null, array $parameters = [])
     {
         $this->className = $className;
         $this->parameters = $parameters;
     }
-    
+
     /**
-     * @return string
+     * @return string|null
      */
-    public function getClassName(): string
+    public function getClassName(): ?string
     {
         return $this->className;
     }
@@ -38,7 +38,7 @@ class DefinitionClass extends AbstractDefinition
     {
         return $this->parameters;
     }
-    
+
     public function parameter(string $key, $value)
     {
         $this->parameters[$key] = $value;

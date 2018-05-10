@@ -2,33 +2,39 @@
 
 namespace HbLib\Container;
 
-use ReflectionFunction;
+use Closure;
 
 class DefinitionFactory extends AbstractDefinition
 {
     /**
-     * @var ReflectionFunction
+     * @var Closure
      */
-    private $function;
-    
+    private $closure;
+
     /**
-     * @param ReflectionFunction $function
+     * @param Closure $closure
      */
-    public function __construct(ReflectionFunction $function)
+    public function __construct(Closure $closure)
     {
-        $this->function = $function;
+        $this->closure = $closure;
     }
-    
-    public static function fromCallable(callable $callable)
+
+    public static function fromCallable($callable)
     {
-        return new self(new \ReflectionFunction($callable));
+        if (is_array($callable)) {
+            $callable = function(InvokerInterface $invoker) use ($callable) {
+                return $invoker->call($callable);
+            };
+        }
+
+        return new self(Closure::fromCallable($callable));
     }
-    
+
     /**
-     * @return ReflectionFunction
+     * @return Closure
      */
-    public function getFunction(): ReflectionFunction
+    public function getClosure(): Closure
     {
-        return $this->function;
+        return $this->closure;
     }
 }
