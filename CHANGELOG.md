@@ -4,6 +4,8 @@
 
 * Bug: Fix container not resolving parameters without a specific type that has default values.
 * Allow to declare parameters with the `get()` definition helper.
+* Internal refactoring and code splitting.
+* Add interface `ArgumentResolverInterface` for the method `resolveArguments()`
 
 ## 1.4.0
 
