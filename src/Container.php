@@ -149,7 +149,9 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             return $this->get($className);
         }
 
+        // @codeCoverageIgnoreStart
         throw new \Exception('Unsupported definition');
+        // @codeCoverageIgnoreEnd
     }
 
     private function resolveClass(string $className, array $parameters = [])

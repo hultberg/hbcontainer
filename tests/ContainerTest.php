@@ -44,6 +44,27 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(Class1::class, $container->get('key'));
     }
     
+    public function testDefinitionFactoryCallableArray()
+    {
+        $class1 = new ClassWithMethod();
+        
+        $container = new Container([
+            'key' => factory([$class1, 'callMe']),
+        ]);
+        
+        $this->assertInstanceOf(Class1::class, $container->get('key'));
+    }
+    
+    public function testDefinitionClassWithDefinitionParameter()
+    {
+        $container = new Container([
+            'class1' => get(Class1::class),
+            'class2' => get(Class2::class)->parameter('class1', get('class1')),
+        ]);
+        
+        $this->assertInstanceOf(Class1::class, $container->get('class2')->class1);
+    }
+    
     public function testDefinitionClassWithParameters()
     {
         $container = new Container([
