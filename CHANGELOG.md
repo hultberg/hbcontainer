@@ -1,6 +1,6 @@
 # Changelog
 
-## (unreleased)
+## 1.6.0
 
 * Bug: Argument resolver did not resolve Definitions
 * `DefinitionClass` now does not require a class name. When not specified, the container will find the class being resolved with the definition and use it. This allows us to write (in definition array): `MyClass::class => get()` and not `MyClass::class => get(MyClass::class)`
