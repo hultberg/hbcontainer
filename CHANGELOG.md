@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+`Container::has()` will no longer call `make()`. This is not seen as a breaking change because the `has` method is documented to not always predict if `get` can return something.
+
 ## 1.6.0
 
 * Bug: Argument resolver did not resolve Definitions

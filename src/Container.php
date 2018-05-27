@@ -260,12 +260,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function has($id)
     {
-        try {
-            $this->make($id);
-        } catch (\ReflectionException|ContainerException $e) {
-            return false;
-        }
-
-        return true;
+        return array_key_exists($id, $this->definitions);
     }
 }
