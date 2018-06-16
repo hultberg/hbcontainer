@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.2
+
+* Fix resolving builtin types with default values.
+* Refactor the logic for resolving parameters
+
 ## 1.6.1
 
 `Container::has()` will no longer call `make()`. This is not seen as a breaking change because the `has` method is documented to not always predict if `get` can return something.
