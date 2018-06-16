@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.3
+
+* Add method `Container::set()`, it is not part of any interface.
+
 ## 1.6.2
 
 * Fix resolving builtin types with default values.

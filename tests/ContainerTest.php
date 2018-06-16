@@ -314,4 +314,17 @@ class ContainerTest extends TestCase
 
         $this->assertInstanceOf(ClassWithDefaultArgument::class, $class);
     }
+
+    public function testSet()
+    {
+        $container = new Container();
+        $container->set(Class1::class, new Class1());
+        $this->assertInstanceOf(Class1::class, $container->get(Class1::class));
+
+        $container->set('hei2', factory(function() {
+            return 'hei';
+        }));
+
+        $this->assertEquals('hei', $container->get('hei2'));
+    }
 }

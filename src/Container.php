@@ -100,6 +100,21 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     }
 
     /**
+     * Set an instance/value or an definition to the container.
+     *
+     * @param string $id
+     * @param AbstractDefinition|mixed $value
+     */
+    public function set($id, $value): void
+    {
+        if ($value instanceof AbstractDefinition) {
+            $this->definitions[$id] = $value;
+        } else {
+            $this->singletons[$id] = $value;
+        }
+    }
+
+    /**
      * Build a class without cache.
      *
      * @see get()
