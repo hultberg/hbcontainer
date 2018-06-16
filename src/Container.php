@@ -205,10 +205,10 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                 }
 
                 $resolvedParameters[$parameter->getName()] = $parameterValue;
-            } else if ($type === null && ($parameter->isOptional() || $parameter->allowsNull())) {
-                $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
+                continue;
             } else {
                 if ($type !== null && !$type->isBuiltin() && $this->classNameExists($type->getName())) {
+                    // We need to resolve a class. In php you cant pass a default class instance AFAIK
                     try {
                         $resolvedParameters[$parameter->getName()] = $this->get($type->getName());
                         continue;
@@ -222,8 +222,15 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                     }
                 }
 
-                throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . $parameter->getDeclaringClass()->getName());
+                // Next is the default value.
+                if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
+                    // Some builtin with a default value.
+                    $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
+                    continue;
+                }
             }
+
+            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . $parameter->getDeclaringClass()->getName());
         }
 
         return $resolvedParameters;
