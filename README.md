@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/hultberg/hbcontainer.svg?branch=master)](https://travis-ci.org/hultberg/hbcontainer)
 
-A lightweight dependency injection container for all types of projects. Supports php 7.1 and newer.
+A PSR-11 lightweight dependency injection container for all types of projects. Supports php 7.1 and newer.
 
 ## Installation
 
