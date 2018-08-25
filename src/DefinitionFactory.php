@@ -55,9 +55,4 @@ class DefinitionFactory extends AbstractDefinition
         
         return $this;
     }
-    
-    public function getTypeName(): string
-    {
-        return 'factory';
-    }
 }

@@ -47,9 +47,4 @@ class DefinitionClass extends AbstractDefinition
         $this->parameters[$key] = $value;
         return $this;
     }
-    
-    public function getTypeName(): string
-    {
-        return 'class';
-    }
 }
