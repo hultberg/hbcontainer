@@ -2,148 +2,195 @@
 
 namespace HbLib\Container\Tests;
 
+use HbLib\Container\DefinitionSource;
+use HbLib\Container\ContainerException;
+
 use Psr\Container\NotFoundExceptionInterface;
 use HbLib\Container\Container;
 use HbLib\Container\InvokeException;
 use HbLib\Container\UnresolvedContainerException;
 use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
-use function HbLib\Container\get;
+use function HbLib\Container\resolve;
+use function HbLib\Container\reference;
 
 class ContainerTest extends TestCase
 {
     public function testGet()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => 'value',
-        ]);
-        $this->assertEquals('value', $container->get('key'));
+        ]));
+        self::assertEquals('value', $container->get('key'));
     }
 
     public function testGetFactory()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => factory(function() { return 12; }),
-        ]);
-        $this->assertEquals(12, $container->get('key'));
+        ]));
+        self::assertEquals(12, $container->get('key'));
+    }
+    
+    public function testGetFactoryParameter()
+    {
+        $container = new Container(new DefinitionSource([
+            'key' => factory(function(Class1 $instance) { return 12; })->parameter('instance', resolve(Class1::class)),
+        ]));
+        self::assertEquals(12, $container->get('key'));
     }
 
     public function testGetPreviousFactory()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => function() { return 12; },
-        ]);
-        $this->assertEquals(12, $container->get('key'));
+        ]));
+        self::assertEquals(12, $container->get('key'));
+    }
+    
+    public function testGetNonDefinitions()
+    {
+        $container = new Container(new DefinitionSource([
+            'hei' => 'lol',
+            'heisann' => function() {
+                return 'null';
+            },
+            'lol2' => false,
+            'qs' => true,
+            'qs2' => 0,
+            'qs3' => 1,
+            'qs4' => '',
+        ]));
+        
+        self::assertSame('lol', $container->get('hei'));
+        self::assertSame('null', $container->get('heisann'));
+        self::assertFalse($container->get('lol2'));
+        self::assertTrue($container->get('qs'));
+        self::assertSame(0, $container->get('qs2'));
+        self::assertSame(1, $container->get('qs3'));
+        self::assertSame('', $container->get('qs4'));
     }
 
     public function testGetObject()
     {
-        $container = new Container([
-            'key' => get(Class1::class),
-        ]);
-        $this->assertInstanceOf(Class1::class, $container->get('key'));
+        $container = new Container(new DefinitionSource([
+            'key' => resolve(Class1::class),
+        ]));
+        self::assertInstanceOf(Class1::class, $container->get('key'));
+    }
+    
+    public function testCatchesCircular()
+    {
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage('Circular dependency detected while resolving entry ' . Circular1::class);
+        
+        $container = new Container(new DefinitionSource([
+            Circular1::class => resolve(),
+            Circular2::class => resolve(),
+        ]));
+        self::assertNotInstanceOf(Circular1::class, $container->get(Circular1::class));
     }
 
     public function testDefinitionFactoryCallableArray()
     {
         $class1 = new ClassWithMethod();
-
-        $container = new Container([
+        
+        $container = new Container(new DefinitionSource([
             'key' => factory([$class1, 'callMe']),
-        ]);
+        ]));
 
-        $this->assertInstanceOf(Class1::class, $container->get('key'));
+        self::assertInstanceOf(Class1::class, $container->get('key'));
     }
 
     public function testDefinitionClassWithDefinitionParameter()
     {
-        $container = new Container([
-            'class1' => get(Class1::class),
-            'class2' => get(Class2::class)->parameter('class1', get('class1')),
-        ]);
+        $container = new Container(new DefinitionSource([
+            'class1' => resolve(Class1::class),
+            'class2' => resolve(Class2::class)->parameter('class1', reference('class1')),
+        ]));
 
-        $this->assertInstanceOf(Class1::class, $container->get('class2')->class1);
+        self::assertInstanceOf(Class1::class, $container->get('class2')->class1);
     }
 
     public function testDefinitionClassWithParameters()
     {
-        $container = new Container([
-            'key' => get(Class2OptionalValue::class)->parameter('value', 'lol'),
-        ]);
+        $container = new Container(new DefinitionSource([
+            'key' => resolve(Class2OptionalValue::class)->parameter('value', 'lol'),
+        ]));
 
-        $this->assertEquals('lol', $container->get('key')->value);
+        self::assertEquals('lol', $container->get('key')->value);
     }
 
     public function testDefinitionClassWithParametersIsNotSingletons()
     {
         // Definitions with a parameter does not use a singleton.
-        $container = new Container([
-            'key1' => get(Class2OptionalValue::class),
-            'key2' => get(Class2OptionalValue::class)->parameter('value', 'lol'),
-        ]);
+        $container = new Container(new DefinitionSource([
+            'key1' => resolve(Class2OptionalValue::class),
+            'key2' => resolve(Class2OptionalValue::class)->parameter('value', 'lol'),
+        ]));
 
         $container->get('key2');
 
         $class2 = $container->get('key1');
         $class2->value = 'singleton';
 
-        $this->assertEquals('lol', $container->get('key2')->value);
+        self::assertEquals('lol', $container->get('key2')->value);
     }
 
     public function testDefinitionClassNoParameters()
     {
-        $container = new Container([
-            'key' => get(Class2OptionalValue::class),
-        ]);
+        $container = new Container(new DefinitionSource([
+            'key' => resolve(Class2OptionalValue::class),
+        ]));
 
-        $this->assertEquals('test', $container->get('key')->value);
+        self::assertEquals('test', $container->get('key')->value);
     }
 
     public function testDefinitionClassNoParametersIsSingletons()
     {
-        $container = new Container([
-            'key' => get(Class2OptionalValue::class),
-        ]);
+        $container = new Container(new DefinitionSource([
+            'key' => resolve(Class2OptionalValue::class),
+        ]));
 
         $class2 = $container->get('key');
         $class2->value = 'singleton';
 
-        $this->assertEquals('singleton', $container->get('key')->value);
+        self::assertEquals('singleton', $container->get('key')->value);
     }
 
     public function testGetIsSingleton()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
             }),
-        ]);
+        ]));
 
-        $this->assertInstanceOf(\stdClass::class, $container->get('key'));
-        $this->assertInternalType('bool', $container->get('key')->test);
-        $this->assertTrue($container->get('key')->test);
+        self::assertInstanceOf(\stdClass::class, $container->get('key'));
+        self::assertInternalType('bool', $container->get('key')->test);
+        self::assertTrue($container->get('key')->test);
 
         $container->get('key')->test = 5;
-        $this->assertInternalType('int', $container->get('key')->test);
-        $this->assertEquals(5, $container->get('key')->test);
+        self::assertInternalType('int', $container->get('key')->test);
+        self::assertEquals(5, $container->get('key')->test);
     }
 
     public function testHas()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
             }),
             'key1' => null,
-        ]);
+        ]));
 
-        $this->assertTrue($container->has('key'));
-        $this->assertTrue($container->has('key1'));
-        $this->assertFalse($container->has('key2'));
+        self::assertTrue($container->has('key'));
+        self::assertTrue($container->has('key1'));
+        self::assertFalse($container->has('key2'));
     }
 
     public function testCallBasic()
@@ -151,14 +198,14 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $someClassInstance = new ClassWithMethod();
-        $this->assertInstanceOf(Class1::class, $container->call([$someClassInstance, 'callMe']));
+        self::assertInstanceOf(Class1::class, $container->call([$someClassInstance, 'callMe']));
     }
 
     public function testCallStatic()
     {
         $container = new Container();
 
-        $this->assertInstanceOf(Class1::class, $container->call([ClassWithMethod::class, 'callMe']));
+        self::assertInstanceOf(Class1::class, $container->call([ClassWithMethod::class, 'callMe']));
     }
 
     public function testCallNonExistingMethod()
@@ -169,7 +216,7 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $someClassInstance = new ClassWithMethod();
-        $this->assertInstanceOf(Class1::class, $container->call([$someClassInstance, 'callMeMaybe']));
+        self::assertInstanceOf(Class1::class, $container->call([$someClassInstance, 'callMeMaybe']));
     }
 
     public function testCallCallable()
@@ -179,7 +226,7 @@ class ContainerTest extends TestCase
             return $class;
         };
 
-        $this->assertInstanceOf(Class1::class, $container->call($callable));
+        self::assertInstanceOf(Class1::class, $container->call($callable));
     }
 
     public function testCallUnsupportedFormat()
@@ -189,7 +236,7 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->call('callMeMaybe');
-        $this->assertFalse(true);
+        self::assertFalse(true);
     }
 
     public function testCallNotInvokeable()
@@ -199,7 +246,7 @@ class ContainerTest extends TestCase
 
         $container = new Container();
 
-        $this->assertInstanceOf(Class1::class, $container->call([1, 'callMe']));
+        self::assertInstanceOf(Class1::class, $container->call([1, 'callMe']));
     }
 
     public function testClassNameExists()
@@ -210,26 +257,26 @@ class ContainerTest extends TestCase
         $classExistsMethod = $ref->getMethod('classNameExists');
         $classExistsMethod->setAccessible(true);
 
-        $this->assertFalse($classExistsMethod->invoke($container, 'SomeClassThatDoNotExist'));
+        self::assertFalse($classExistsMethod->invoke($container, 'SomeClassThatDoNotExist'));
     }
 
     public function testMakeNotSingleton()
     {
-        $container = new Container([
+        $container = new Container(new DefinitionSource([
             'key' => factory(function() {
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
             }),
-        ]);
+        ]));
 
-        $this->assertInstanceOf(\stdClass::class, $container->make('key'));
-        $this->assertInternalType('bool', $container->make('key')->test);
-        $this->assertTrue($container->make('key')->test);
+        self::assertInstanceOf(\stdClass::class, $container->make('key'));
+        self::assertInternalType('bool', $container->make('key')->test);
+        self::assertTrue($container->make('key')->test);
 
         $container->make('key')->test = 5;
-        $this->assertInternalType('bool', $container->make('key')->test);
-        $this->assertTrue($container->make('key')->test);
+        self::assertInternalType('bool', $container->make('key')->test);
+        self::assertTrue($container->make('key')->test);
     }
 
     public function testMakeInterfaceRequiredDependency()
@@ -242,7 +289,7 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->make(Class2RequireInterface1::class);
-        $this->assertFalse(true);
+        self::assertFalse(true);
     }
 
     public function testMakeInterfaceOptionalDependency()
@@ -250,7 +297,7 @@ class ContainerTest extends TestCase
         // Almost the same as the previous test, but the parameter is not required.
 
         $container = new Container();
-        $this->assertNull($container->make(Class2OptionalInterface1::class)->interface);
+        self::assertNull($container->make(Class2OptionalInterface1::class)->interface);
     }
 
     public function testMakeNonExistingClass()
@@ -260,7 +307,7 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->make('SomeClassThatDoNotExists');
-        $this->assertFalse(true);
+        self::assertFalse(true);
     }
 
     public function testMakeAbstract()
@@ -270,7 +317,7 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->make(AbstractClass1::class);
-        $this->assertFalse(true);
+        self::assertFalse(true);
     }
 
     public function testMakeInterface()
@@ -280,16 +327,16 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->make(Interface1::class);
-        $this->assertFalse(true);
+        self::assertFalse(true);
     }
 
     public function testMakeResolveDependency()
     {
         $container = new Container();
 
-        $this->assertInstanceOf(Class2::class, $container->make(Class2::class));
-        $this->assertInstanceOf(Class1::class, $container->make(Class2::class)->class1);
-        $this->assertEquals('init', $container->make(Class2::class)->class1->parameter);
+        self::assertInstanceOf(Class2::class, $container->make(Class2::class));
+        self::assertInstanceOf(Class1::class, $container->make(Class2::class)->class1);
+        self::assertEquals('init', $container->make(Class2::class)->class1->parameter);
     }
 
     public function testMakeResolveDependencyInjectParameter()
@@ -301,9 +348,9 @@ class ContainerTest extends TestCase
 
         $class2 = $container->make(Class2::class, array('class1' => $class1Instance));
 
-        $this->assertInstanceOf(Class2::class, $class2);
-        $this->assertInstanceOf(Class1::class, $class2->class1);
-        $this->assertEquals('otherValue', $class2->class1->parameter);
+        self::assertInstanceOf(Class2::class, $class2);
+        self::assertInstanceOf(Class1::class, $class2->class1);
+        self::assertEquals('otherValue', $class2->class1->parameter);
     }
 
     public function testResolvesWithDefault()
@@ -312,19 +359,31 @@ class ContainerTest extends TestCase
 
         $class = $container->get(ClassWithDefaultArgument::class);
 
-        $this->assertInstanceOf(ClassWithDefaultArgument::class, $class);
+        self::assertInstanceOf(ClassWithDefaultArgument::class, $class);
     }
 
     public function testSet()
     {
         $container = new Container();
         $container->set(Class1::class, new Class1());
-        $this->assertInstanceOf(Class1::class, $container->get(Class1::class));
+        self::assertInstanceOf(Class1::class, $container->get(Class1::class));
 
         $container->set('hei2', factory(function() {
             return 'hei';
         }));
 
-        $this->assertEquals('hei', $container->get('hei2'));
+        self::assertEquals('hei', $container->get('hei2'));
+    }
+}
+
+class Circular1 {
+    function __construct(Circular2 $class) {
+        
+    }
+}
+
+class Circular2 {
+    function __construct(Circular1 $class) {
+        
     }
 }

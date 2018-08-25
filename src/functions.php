@@ -7,9 +7,14 @@ namespace HbLib\Container {
         return DefinitionFactory::fromCallable($callable);
     }
 
-    function get(string $key = null): DefinitionClass
+    function resolve(string $key = null): DefinitionClass
     {
         return new DefinitionClass($key);
+    }
+
+    function reference(string $key): DefinitionReference
+    {
+        return new DefinitionReference($key);
     }
 
 }

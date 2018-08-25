@@ -11,17 +11,23 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     /**
      * @var array
      */
-    private $singletons;
+    protected $singletons;
 
+    /**
+     * @var DefinitionSource
+     */
+    protected $definitionSource;
+    
     /**
      * @var array
      */
-    private $definitions;
+    protected $entriesBeingResolved;
 
-    public function __construct(array $definitions = array())
+    public function __construct(DefinitionSource $definitionSource = null)
     {
-        $this->singletons = array();
-        $this->definitions = $definitions;
+        $this->singletons = [];
+        $this->entriesBeingResolved = [];
+        $this->definitionSource = $definitionSource ?? new DefinitionSource();
 
         // Register the container itself.
         $this->singletons[self::class] = $this;
@@ -108,7 +114,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     public function set($id, $value): void
     {
         if ($value instanceof AbstractDefinition) {
-            $this->definitions[$id] = $value;
+            $this->definitionSource->setDefinition($id, $value);
         } else {
             $this->singletons[$id] = $value;
         }
@@ -129,39 +135,54 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function make(string $id, array $parameters = array())
     {
-        if (array_key_exists($id, $this->definitions)) {
-            $definition = $this->definitions[$id];
-
-            if (is_callable($definition)) {
-                $definition = DefinitionFactory::fromCallable($definition);
-            }
-
-            if ($definition instanceof AbstractDefinition) {
-                return $this->resolveDefinition($definition, $id);
-            }
-
-            // Return whatever...
-            return $definition;
+        if (isset($this->entriesBeingResolved[$id])) {
+            throw new ContainerException('Circular dependency detected while resolving entry ' . $id);
         }
+        $this->entriesBeingResolved[$id] = true;
+            
+        try {
+            $definition = $this->definitionSource->getDefinition($id);
+            
+            if ($definition !== null) {
+                if (is_callable($definition)) {
+                    $definition = DefinitionFactory::fromCallable($definition);
+                }
 
-        return $this->resolveClass($id, $parameters);
+                if ($definition instanceof AbstractDefinition) {
+                    return $this->resolveDefinition($definition, $id);
+                }
+
+                // Return whatever...
+                return $definition;
+            }
+
+            return $this->resolveClass($id, $parameters);
+        } finally {
+            unset($this->entriesBeingResolved[$id]);
+        }
     }
 
     private function resolveDefinition(AbstractDefinition $definition, $requestedId)
     {
         if ($definition instanceof DefinitionFactory) {
             $function = new \ReflectionFunction($definition->getClosure());
-            return $function->invokeArgs($this->resolveArguments($function));
+            return $function->invokeArgs($this->resolveArguments($function, $definition->getParameters()));
         }
 
         if ($definition instanceof DefinitionClass) {
             $className = $definition->getClassName() ?? $requestedId;
 
             if (count($definition->getParameters()) > 0) {
+                // There are specific parameters on this class definition, don't use any singleton cache.
                 return $this->resolveClass($className, $definition->getParameters());
             }
 
+            // No parameters, we can just "get" the class.
             return $this->get($className);
+        }
+        
+        if ($definition instanceof DefinitionReference) {
+            return $this->get($definition->getClassName());
         }
 
         // @codeCoverageIgnoreStart
@@ -169,6 +190,13 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         // @codeCoverageIgnoreEnd
     }
 
+    /**
+     * Construct a class instance and resolve all parameters not provided in the parameters array.
+     * 
+     * @param string $className  
+     * @param array  $parameters 
+     * @return mixed
+     */
     private function resolveClass(string $className, array $parameters = [])
     {
         try {
@@ -282,6 +310,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function has($id)
     {
-        return array_key_exists($id, $this->definitions);
+        return $this->definitionSource->hasDefinition($id);
     }
 }

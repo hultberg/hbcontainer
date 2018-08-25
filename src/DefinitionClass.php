@@ -2,6 +2,9 @@
 
 namespace HbLib\Container;
 
+/**
+ * An definition for a class that can have instances created.
+ */
 class DefinitionClass extends AbstractDefinition
 {
     /**

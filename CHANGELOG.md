@@ -1,5 +1,14 @@
 # Changelog
 
+## (unreleased)
+
+* Implement compiling container with all defined definitions
+* Rename helper function `\HbLib\Container\get` to `\HbLib\Container\resolve`
+* Add new definition `Reference`, use it to reference other definitions. A helper function has been added for it: `\HbLib\Container\reference`
+* Add new `DefinitionSource` object to hold all definitions.
+* Add new `ContainerBuilder`. It allows you to enable compiling.
+* Implement circular dependency resolving checking
+
 ## 1.6.3
 
 * Add method `Container::set()`, it is not part of any interface.

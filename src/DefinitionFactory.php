@@ -10,6 +10,11 @@ class DefinitionFactory extends AbstractDefinition
      * @var Closure
      */
     private $closure;
+    
+    /**
+     * @var array
+     */
+    private $parameters;
 
     /**
      * @param Closure $closure
@@ -17,6 +22,7 @@ class DefinitionFactory extends AbstractDefinition
     public function __construct(Closure $closure)
     {
         $this->closure = $closure;
+        $this->parameters = [];
     }
 
     public static function fromCallable($callable)
@@ -36,5 +42,17 @@ class DefinitionFactory extends AbstractDefinition
     public function getClosure(): Closure
     {
         return $this->closure;
+    }
+    
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+    
+    public function parameter(string $name, $value)
+    {
+        $this->parameters[$name] = $value;
+        
+        return $this;
     }
 }
