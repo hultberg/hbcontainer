@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.3
+
+* Fix unable to compile optional interface arguments and runtime defined definitions.
+
 ## v2.1.2
 
 * Fix unable to compile optional arguments
