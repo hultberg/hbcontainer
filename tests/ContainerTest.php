@@ -378,12 +378,12 @@ class ContainerTest extends TestCase
 
 class Circular1 {
     function __construct(Circular2 $class) {
-        
+        $class = 'lol';
     }
 }
 
 class Circular2 {
     function __construct(Circular1 $class) {
-        
+        $class = 'lol';
     }
 }

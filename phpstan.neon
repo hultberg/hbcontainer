@@ -1,0 +1,5 @@
+parameters:
+	excludes_analyse:
+		- %currentWorkingDirectory%/src/compiled_template.php
+	ignoreErrors:
+		- '#Access to undefined constant HbLib\\Container\\CompiledContainer::METHOD_MAPPING.#'

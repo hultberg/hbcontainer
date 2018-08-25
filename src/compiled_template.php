@@ -1,3 +1,11 @@
+<?php
+/**
+ * @var string $compileParentClass
+ * @var string $compileClass
+ * @var \HbLib\Container\Compiler $this
+ */
+?>
+
 class <?php echo $compileClass; ?> extends <?php echo $compileParentClass; ?> 
 {
     const METHOD_MAPPING = <?php var_export($this->entryToMethods); ?>;
