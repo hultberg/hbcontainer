@@ -96,7 +96,7 @@ class Compiler
             
             // Ensure we compile this definition too.
             if (!isset($this->definitionsToCompile[$className])) {
-                $this->definitionsToCompile = null;
+                $this->definitionsToCompile[$className] = null;
             }
             
             $code = 'return $this->get(' . $this->compileValue($className) . ');';
