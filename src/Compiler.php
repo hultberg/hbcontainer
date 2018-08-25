@@ -193,8 +193,12 @@ class Compiler
                 // Case #2: Definition entry ID as typehint?
                 $typeHint = $argument->getTypeHintClassName();
                 if ($typeHint !== null) {
-                    $resolvedParameters[key($resolvedParameters)] = new DefinitionReference($typeHint);
-                    continue;
+                    $class = new \ReflectionClass($typeHint);
+                    
+                    if ($class->isInstantiable() || $this->definitions->hasDefinition($typeHint)) {
+                        $resolvedParameters[key($resolvedParameters)] = new DefinitionReference($typeHint);
+                        continue;
+                    }
                 }
                 
                 // Case #3: Optional?

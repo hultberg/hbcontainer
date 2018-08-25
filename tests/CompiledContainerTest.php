@@ -211,6 +211,19 @@ class CompiledContainerTest extends TestCase
         self::assertSame(1, $container->get('qs3'));
         self::assertSame('', $container->get('qs4'));
     }
+    
+    public function testResolveOptionalInterface()
+    {
+        $containerBuilder = new ContainerBuilder(new DefinitionSource([
+            SessionClass::class => resolve(),
+        ]));
+        
+        $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
+        $container = $containerBuilder->build();
+        
+        self::assertInstanceOf(SessionClass::class, $container->get(SessionClass::class));
+        self::assertNull($container->get(SessionClass::class)->bag);
+    }
 }
 
 class Class10 {
@@ -233,5 +246,15 @@ class Class200 {
         $this->class = $class1;
         $this->someString = $someString;
         $this->moreStrings = $moreStrings;
+    }
+}
+
+interface InterfaceSessionBagCompiled {}
+
+class SessionClass {
+    public $bag;
+    
+    function __construct(InterfaceSessionBagCompiled $bag = null) {
+        $this->bag = $bag;
     }
 }

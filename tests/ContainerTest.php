@@ -439,6 +439,16 @@ class ContainerTest extends TestCase
         self::assertSame($rand->int, $needsRand->rand->int);
         self::assertSame($needsRand->rand->int, $needsNeedsRand->rand->rand->int);
     }
+    
+    public function testResolveOptionalInterface()
+    {
+        $container = new Container(new DefinitionSource([
+            Session::class => resolve(),
+        ]));
+        
+        self::assertInstanceOf(Session::class, $container->get(Session::class));
+        self::assertNull($container->get(Session::class)->bag);
+    }
 }
 
 class Circular1 {
@@ -474,5 +484,15 @@ class NeedsNeedsWithRandom {
     
     function __construct(NeedsWithRandom $random) {
         $this->rand = $random;
+    }
+}
+
+interface InterfaceSessionBag {}
+
+class Session {
+    public $bag;
+    
+    function __construct(InterfaceSessionBag $bag = null) {
+        $this->bag = $bag;
     }
 }
