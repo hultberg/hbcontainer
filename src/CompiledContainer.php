@@ -36,6 +36,7 @@ abstract class CompiledContainer extends Container
             return $this->call($definition->getClosure(), $parameters);
         }
         
+        // Unless someone changed a definition in runtime... this will happen.
         throw new \RuntimeException('Definition ' . $entryName . ' is not a factory');
     }
 }

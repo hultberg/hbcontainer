@@ -40,7 +40,7 @@ class ContainerBuilder
         $this->definitions = $definitions instanceof DefinitionSource ? $definitions : new DefinitionSource($definitions);
     }
     
-    public function enableCompiling(string $filePath = null): void
+    public function enableCompiling(string $filePath = null, string $className = null): void
     {
         $this->enableCompiling = true;
         
@@ -48,7 +48,7 @@ class ContainerBuilder
         $this->compileFilePath = $filePath ?? sys_get_temp_dir() . '/CompiledContainer.php';
         
         // The default CompiledContainer class. It is in the global namespace.
-        $this->containerClass = '\CompiledContainer';
+        $this->containerClass = $className ?? '\CompiledContainer';
     }
     
     public function build()
@@ -59,7 +59,7 @@ class ContainerBuilder
         
         // Compiling is enabled, lets go.
         if ($this->enableCompiling) {
-            $compiler = new Compiler($this->compileFilePath);
+            $compiler = new Compiler($this->compileFilePath, $containerClass);
             $compiledClassFile = $compiler->compile($this->definitions);
             
             // In case our generated container class is not autoloaded, load it.

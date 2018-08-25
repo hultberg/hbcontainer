@@ -12,6 +12,16 @@ class Compiler
     private $definitionsToCompile;
     
     /**
+     * @var string
+     */
+    private $compiledClassName;
+    
+    /**
+     * @var string
+     */
+    private $compiledParentClassName;
+        
+    /**
      * @var array
      */
     private $methods;
@@ -26,9 +36,11 @@ class Compiler
      */
     private $fileInfo;
     
-    public function __construct(string $filePath)
+    public function __construct(string $filePath, string $compiledClassName = 'CompiledContainer')
     {
         $this->fileInfo = new \SplFileInfo($filePath);
+        $this->compiledClassName = $compiledClassName;
+        $this->compiledParentClassName = '\\' . CompiledContainer::class;
         $this->methods = [];
         $this->entryToMethods = [];
     }
@@ -37,10 +49,6 @@ class Compiler
     {
         // Compile the container if we have not already done it.
         if (!$this->fileInfo->isFile()) {
-            // TODO: allow to configure these variables at some point.
-            $compileClass       = 'CompiledContainer';
-            $compileParentClass = '\\' . CompiledContainer::class;
-            
             $this->definitionsToCompile = new \ArrayIterator($definitions->getDefinitions());
             
             foreach ($this->definitionsToCompile as $id => $definition) {

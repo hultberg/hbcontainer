@@ -6,7 +6,7 @@
  */
 ?>
 
-class <?php echo $compileClass; ?> extends <?php echo $compileParentClass; ?> 
+class <?php echo $this->compiledClassName; ?> extends <?php echo $this->compiledParentClassName; ?> 
 {
     const METHOD_MAPPING = <?php var_export($this->entryToMethods); ?>;
     

@@ -352,6 +352,19 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $class2->class1);
         self::assertEquals('otherValue', $class2->class1->parameter);
     }
+    
+    public function testArgumentBuiltin()
+    {
+        $container = new Container(new DefinitionSource([
+            'key' => factory(function(string $name) {
+                return new \stdClass;
+            }),
+        ]));
+        
+        $this->expectException(UnresolvedContainerException::class);
+        $this->expectExceptionMessage('Unable to resolve parameter name on entity');
+        $container->get('key');
+    }
 
     public function testResolvesWithDefault()
     {
