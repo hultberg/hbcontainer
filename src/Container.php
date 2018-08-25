@@ -137,61 +137,58 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     {
         $definition = $this->definitionSource->getDefinition($id);
         
-        if ($definition !== null) {
-            if ($definition instanceof AbstractDefinition) {
-                return $this->resolveDefinition($definition, $id);
-            }
-        
-            if (is_callable($definition)) {
-                return $this->call($definition);
-            }
-
-            // Return whatever...
-            return $definition;
+        if (isset($this->entriesBeingResolved[$id])) {
+            throw new CircularDependencyException('Circular dependency detected while resolving entry ' . $id);
         }
-
-        return $this->resolveClass($id, $parameters);
+        $this->entriesBeingResolved[$id] = true;
         
+        try {
+            if ($definition !== null) {
+                if ($definition instanceof AbstractDefinition) {
+                    return $this->resolveDefinition($definition, $id);
+                }
+            
+                if (is_callable($definition)) {
+                    return $this->call($definition);
+                }
+
+                // Return whatever...
+                return $definition;
+            }
+
+            return $this->resolveClass($id, $parameters);
+        } finally {
+            unset($this->entriesBeingResolved[$id]);
+        }
     }
 
     private function resolveDefinition(AbstractDefinition $definition, $requestedId)
     {
-        $entryUniqueId = $definition->getTypeName() . $requestedId;
-        
-        if (isset($this->entriesBeingResolved[$entryUniqueId])) {
-            throw new ContainerException('Circular dependency detected while resolving entry ' . $requestedId);
+        if ($definition instanceof DefinitionFactory) {
+            // TODO: We should just use call_user_func_array here.
+            $function = new \ReflectionFunction($definition->getClosure());
+            return $function->invokeArgs($this->resolveArguments($function, $definition->getParameters()));
         }
-        $this->entriesBeingResolved[$entryUniqueId] = true;
-        
-        try {
-            if ($definition instanceof DefinitionFactory) {
-                // TODO: We should just use call_user_func_array here.
-                $function = new \ReflectionFunction($definition->getClosure());
-                return $function->invokeArgs($this->resolveArguments($function, $definition->getParameters()));
+
+        if ($definition instanceof DefinitionClass) {
+            $className = $definition->getClassName() ?? $requestedId;
+
+            if (count($definition->getParameters()) > 0) {
+                // There are specific parameters on this class definition, don't use any singleton cache.
+                return $this->resolveClass($className, $definition->getParameters());
             }
 
-            if ($definition instanceof DefinitionClass) {
-                $className = $definition->getClassName() ?? $requestedId;
-
-                if (count($definition->getParameters()) > 0) {
-                    // There are specific parameters on this class definition, don't use any singleton cache.
-                    return $this->resolveClass($className, $definition->getParameters());
-                }
-
-                // No parameters, we can just "get" the class.
-                return $this->get($className);
-            }
-            
-            if ($definition instanceof DefinitionReference) {
-                return $this->get($definition->getClassName());
-            }
-
-            // @codeCoverageIgnoreStart
-            throw new \Exception('Unsupported definition');
-            // @codeCoverageIgnoreEnd
-        } finally {
-            unset($this->entriesBeingResolved[$entryUniqueId]);
+            // No parameters, we can just "get" the class.
+            return $this->resolveClass($className);
         }
+        
+        if ($definition instanceof DefinitionReference) {
+            return $this->get($definition->getClassName());
+        }
+
+        // @codeCoverageIgnoreStart
+        throw new \Exception('Unsupported definition');
+        // @codeCoverageIgnoreEnd
     }
 
     /**

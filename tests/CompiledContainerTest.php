@@ -14,8 +14,15 @@ class CompiledContainerTest extends TestCase
     private function createTempFile()
     {
         // https://secure.php.net/manual/en/function.tmpfile.php#122678
-        $tmpFile = tmpfile();
-        return stream_get_meta_data($tmpFile)['uri'];
+        $tmpFile = stream_get_meta_data(tmpfile())['uri'];
+        
+        register_shutdown_function(function() use ($tmpFile) {
+            if (file_exists($tmpFile)) {
+                unlink($tmpFile);
+            }
+        });
+        
+        return $tmpFile;
     }
     
     private function getUniqueClassName(): string
