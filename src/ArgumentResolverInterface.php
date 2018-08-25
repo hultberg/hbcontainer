@@ -10,9 +10,9 @@ interface ArgumentResolverInterface
      * @param \ReflectionFunctionAbstract $function
      * @param array $arguments
      *
-     * @return array
+     * @return Argument[]
      *
      * @throws UnresolvedContainerException
      */
-    public function resolveArguments(\ReflectionFunctionAbstract $function, array $arguments = array()): array;
+    public function resolve(\ReflectionFunctionAbstract $function, array $arguments = array()): array;
 }

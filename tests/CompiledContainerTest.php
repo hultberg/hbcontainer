@@ -4,6 +4,7 @@ namespace HbLib\Container\Tests;
 
 use HbLib\Container\ContainerBuilder;
 use HbLib\Container\DefinitionSource;
+use HbLib\Container\UnresolvedContainerException;
 use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
 use function HbLib\Container\reference;
@@ -137,8 +138,8 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to compile a single parameter');
+        $this->expectException(UnresolvedContainerException::class);
+        $this->expectExceptionMessage('Unable to resolve parameter name on entity');
         $container = $containerBuilder->build();
     }
     

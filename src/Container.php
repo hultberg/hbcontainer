@@ -6,7 +6,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-class Container implements ContainerInterface, FactoryInterface, InvokerInterface, ArgumentResolverInterface
+class Container implements ContainerInterface, FactoryInterface, InvokerInterface
 {
     /**
      * @var array
@@ -22,19 +22,30 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * @var array
      */
     protected $entriesBeingResolved;
+    
+    /**
+     * @var ArgumentResolverInterface
+     */
+    private $argumentResolver;
 
-    public function __construct(DefinitionSource $definitionSource = null)
+    public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
     {
         $this->singletons = [];
         $this->entriesBeingResolved = [];
+        
         $this->definitionSource = $definitionSource ?? new DefinitionSource();
+        $this->definitionSource->setDefinition(ContainerInterface::class, new DefinitionReference(self::class));
+        $this->definitionSource->setDefinition(FactoryInterface::class, new DefinitionReference(self::class));
+        $this->definitionSource->setDefinition(InvokerInterface::class, new DefinitionReference(self::class));
+        
+        $this->argumentResolver = $argumentResolver ?? new ArgumentResolver($this->definitionSource);
+        
+        $argumentResolverClassName = get_class($this->argumentResolver);
+        $this->definitionSource->setDefinition($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
+        $this->definitionSource->setDefinition(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
 
         // Register the container itself.
         $this->singletons[self::class] = $this;
-        $this->singletons[ContainerInterface::class] = $this;
-        $this->singletons[FactoryInterface::class] = $this;
-        $this->singletons[InvokerInterface::class] = $this;
-        $this->singletons[ArgumentResolverInterface::class] = $this;
     }
 
     /**
@@ -98,8 +109,8 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         }
 
         if (is_callable($callable) || (is_string($callable) && function_exists($callable))) {
-            $reflectionFunction = new \ReflectionFunction($callable);
-            return $reflectionFunction->invokeArgs($this->resolveArguments($reflectionFunction, $parameters));
+            $function = new \ReflectionFunction($callable);
+            return $function->invokeArgs($this->resolveArguments($function, $parameters));
         }
 
         throw new InvokeException('Unsupported format.');
@@ -143,15 +154,15 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         $this->entriesBeingResolved[$id] = true;
         
         try {
-            if ($definition !== null) {
-                if ($definition instanceof AbstractDefinition) {
-                    return $this->resolveDefinition($definition, $id);
-                }
+            if ($definition instanceof AbstractDefinition) {
+                return $this->resolveDefinition($definition, $id);
+            }
+        
+            if (is_callable($definition)) {
+                return $this->call($definition);
+            }
             
-                if (is_callable($definition)) {
-                    return $this->call($definition);
-                }
-
+            if ($definition !== null) {
                 // Return whatever...
                 return $definition;
             }
@@ -232,8 +243,8 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if ($constructor === null) {
             return new $className(); // No constructor.
         }
-
-        return $reflection->newInstanceArgs(array_values($this->resolveArguments($constructor, $parameters)));
+        
+        return $reflection->newInstanceArgs($this->resolveArguments($constructor, $parameters));
     }
 
     /**
@@ -248,48 +259,43 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function resolveArguments(\ReflectionFunctionAbstract $function, array $arguments = array()): array
     {
-        $resolvedParameters = array();
-
-        foreach ($function->getParameters() as $parameter) {
-            // Identify if the type is a class we can attempt to build.
-            $type = $parameter->getType();
-
-            if (array_key_exists($parameter->getName(), $arguments)) {
-                $parameterValue = $arguments[$parameter->getName()];
-
-                if ($parameterValue instanceof AbstractDefinition) {
-                    $parameterValue = $this->resolveDefinition($parameterValue, $parameter->getName());
-                }
-
-                $resolvedParameters[$parameter->getName()] = $parameterValue;
-                continue;
-            } else {
-                if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
-                    // We need to resolve a class. In php you cant pass a default class instance AFAIK
-                    try {
-                        $resolvedParameters[$parameter->getName()] = $this->get($type->getName());
-                        continue;
-                    } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-                        if (!$parameter->isOptional() && !$parameter->allowsNull()) {
-                            $declaringClass = $parameter->getDeclaringClass();
-                            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($declaringClass ? $declaringClass->getName() : 'N/A'), 0, $e);
-                        }
-
-                        $resolvedParameters[$parameter->getName()] = null;
-                        continue;
-                    }
-                }
-
-                // Next is the default value.
-                if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
-                    // Some builtin with a default value.
-                    $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
+        $resolvedParameters = $this->argumentResolver->resolve($function, $arguments);
+        
+        if (!empty($resolvedParameters)) {
+            reset($resolvedParameters);
+            
+            // Loop over and resolve each argument via the container.
+            do {
+                $previousException = null;
+                
+                /** @var Argument $argument */
+                $argument = current($resolvedParameters);
+                
+                // Case #1: Did someone provide a value?
+                if ($argument->isResolved()) {
+                    $resolvedParameters[key($resolvedParameters)] = $this->resolveValue($argument->getValue(), $argument->getName());
                     continue;
                 }
-            }
-
-            $declaringClass = $parameter->getDeclaringClass();
-            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($declaringClass ? $declaringClass->getName() : 'N/A'));
+                
+                // Case #2: Definition entry ID as typehint?
+                $typeHint = $argument->getTypeHintClassName();
+                if ($typeHint !== null) {
+                    try {
+                        $resolvedParameters[key($resolvedParameters)] = $this->get($typeHint);
+                        continue;
+                    } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+                        $previousException = $e; // Don't report now, we might have an optional value to use.
+                    }
+                }
+                
+                // Case #3: Optional?
+                if ($argument->isOptional()) {
+                    $resolvedParameters[key($resolvedParameters)] = $argument->getDefaultValue();
+                    continue;
+                }
+                
+                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . '', 0, $previousException);
+            } while (next($resolvedParameters));
         }
 
         return $resolvedParameters;

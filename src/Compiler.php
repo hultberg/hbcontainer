@@ -7,6 +7,11 @@ namespace HbLib\Container;
 class Compiler
 {
     /**
+     * @var DefinitionSource
+     */
+    private $definitions;
+    
+    /**
      * @var \ArrayIterator
      */
     private $definitionsToCompile;
@@ -32,6 +37,11 @@ class Compiler
     private $entryToMethods;
     
     /**
+     * @var ArgumentResolverInterface
+     */
+    private $argumentResolver;
+    
+    /**
      * @var \SplFileInfo
      */
     private $fileInfo;
@@ -49,6 +59,7 @@ class Compiler
     {
         // Compile the container if we have not already done it.
         if (!$this->fileInfo->isFile()) {
+            $this->definitions = $definitions;
             $this->definitionsToCompile = new \ArrayIterator($definitions->getDefinitions());
             
             foreach ($this->definitionsToCompile as $id => $definition) {
@@ -83,6 +94,9 @@ class Compiler
             // example: (umask=0022) is 420 (644 in oct)
             // TODO: unsilence the chmod and report the error.
             @chmod($this->fileInfo->getPathname(), 0666 & ~umask());
+            
+            $this->entryToMethods = $this->methods = [];
+            unset($this->definitions, $this->definitionsToCompile, $this->argumentResolver);
         }
         
         return $this->fileInfo->getPathname();
@@ -98,82 +112,99 @@ class Compiler
         $methodName = str_replace('.', '', uniqid('get', true));
         $this->entryToMethods[$entryName] = $methodName;
         
-        if ($definition instanceof DefinitionReference) {
-            // Reference to another definition.
-            $entryName = $definition->getEntryName();
+        switch (true) {
+            case $definition instanceof DefinitionReference:
+                // Reference to another definition.
+                $entryName = $definition->getEntryName();
+                
+                // Ensure we compile this definition too.
+                if (!isset($this->definitionsToCompile[$entryName])) {
+                    $this->definitionsToCompile[$entryName] = null;
+                }
+                
+                $code = 'return $this->get(' . $this->compileValue($entryName) . ');';
+                break;
+                
+            case $definition instanceof DefinitionFactory:
+                // Reference to another definition.
+                $resolvedParameters = $this->resolveParameters(new \ReflectionFunction($definition->getClosure()), $definition->getParameters());
             
-            // Ensure we compile this definition too.
-            if (!isset($this->definitionsToCompile[$entryName])) {
-                $this->definitionsToCompile[$entryName] = null;
-            }
-            
-            $code = 'return $this->get(' . $this->compileValue($entryName) . ');';
-            $this->methods[$methodName] = $code;
-        } else if ($definition instanceof DefinitionFactory) {
-            // Reference to another definition.
-        
-            $factory            = $definition->getClosure();
-            $reflectionFunction = new \ReflectionFunction($factory);
-            $resolvedParameters = $this->resolveParameters($reflectionFunction->getParameters(), $definition->getParameters());
-        
-            $parametersString = '';
-            if (!empty($resolvedParameters)) {
-                $parametersString = ', ' . $this->compileValue($resolvedParameters);
-            }
-            
-            $code = 'return $this->resolveFactory(' . $this->compileValue($entryName) . '' . $parametersString . ');';
-        
-            $this->methods[$methodName] = $code;
-        } else if ($definition instanceof DefinitionClass) {
-            $className = $definition->getClassName() ?? $entryName;
-            
-            $reflectionClass = new \ReflectionClass($className);
-            $constructor = $reflectionClass->getConstructor();
-            $definedParameters = $definition->getParameters();
-            
-            $parametersString = '';
-            if ($constructor !== null) {
-                $resolvedParameters = array_values($this->resolveParameters($constructor->getParameters(), $definedParameters));
-                $compiledResolvedParameters = array_map([$this, 'compileValue'], $resolvedParameters);
-                $parametersString = implode(',', $compiledResolvedParameters);
-            }
-            
-            $code = 'return new ' . $className . '(' . $parametersString . ');';
-            $this->methods[$methodName] = $code;
-        } else if ($definition instanceof DefinitionValue) {
-            $code = 'return ' . $this->compileValue($definition->getValue()) . ';';
-            $this->methods[$methodName] = $code;
+                $parametersString = '';
+                if (!empty($resolvedParameters)) {
+                    $parametersString = ', ' . $this->compileValue($resolvedParameters);
+                }
+                
+                $code = 'return $this->resolveFactory(' . $this->compileValue($entryName) . '' . $parametersString . ');';
+                break;
+                
+            case $definition instanceof DefinitionClass:
+                $className = $definition->getClassName() ?? $entryName;
+                
+                $reflectionClass = new \ReflectionClass($className);
+                $constructor = $reflectionClass->getConstructor();
+                $definedParameters = $definition->getParameters();
+                
+                $parametersString = '';
+                if ($constructor !== null) {
+                    $resolvedParameters = $this->resolveParameters($constructor, $definedParameters);
+                    
+                    $i = 0;
+                    foreach ($resolvedParameters as $parameter) {
+                        $parametersString .= ($i++ > 0 ? ', ' : '') . $this->compileValue($parameter);
+                    }
+                }
+                
+                $code = 'return new ' . $className . '(' . $parametersString . ');';
+                break;
+                
+            case $definition instanceof DefinitionValue:
+                $code = 'return ' . $this->compileValue($definition->getValue()) . ';';
+                break;
+                
+            default:
+                throw new \RuntimeException('Invalid definition');
+                break;
         }
         
+        $this->methods[$methodName] = $code;
         return $methodName;
     }
     
-    private function resolveParameters(array $parameters, array $extraParameters = [])
+    private function resolveParameters(\ReflectionFunctionAbstract $function, array $extraParameters = [])
     {
-        $resolvedParameters = [];
+        if ($this->argumentResolver === null) {
+            $this->argumentResolver = new ArgumentResolver($this->definitions);
+        }
         
-        foreach ($parameters as $parameter) {
-            $name = $parameter->getName();
+        $resolvedParameters = $this->argumentResolver->resolve($function, $extraParameters);
+        
+        if (!empty($resolvedParameters)) {
+            reset($resolvedParameters);
             
-            if (array_key_exists($parameter->getName(), $extraParameters)) {
-                $extraParametersValue = $extraParameters[$parameter->getName()];
+            do {
+                /** @var Argument $argument */
+                $argument = current($resolvedParameters);
                 
-                $resolvedParameters[$name] = $extraParametersValue;
-                continue;
-            }
-            
-            $type = $parameter->getType();
-            
-            if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
-                // a class we can, create a reference to it and compile.
-                $resolvedParameters[$name] = new DefinitionReference($type->getName());
-                continue;
-            } else if ($parameter->isOptional()) {
-                $resolvedParameters[$name] = $parameter->getDefaultValue();
-                continue;
-            }
-            
-            throw new \RuntimeException('Failed to compile a single parameter');
+                if ($argument->isResolved()) {
+                    $resolvedParameters[key($resolvedParameters)] = $argument->getValue();
+                    continue;
+                }
+                
+                // Case #2: Definition entry ID as typehint?
+                $typeHint = $argument->getTypeHintClassName();
+                if ($typeHint !== null) {
+                    $resolvedParameters[key($resolvedParameters)] = new DefinitionReference($typeHint);
+                    continue;
+                }
+                
+                // Case #3: Optional?
+                if ($argument->isOptional()) {
+                    $resolvedParameters[key($resolvedParameters)] = $argument->getDefaultValue();
+                    continue;
+                }
+                
+                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . '');
+            } while (next($resolvedParameters));
         }
         
         return $resolvedParameters;
