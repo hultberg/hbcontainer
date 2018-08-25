@@ -97,7 +97,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             return $method->invokeArgs($classInstance, $this->resolveArguments($method, $parameters));
         }
 
-        if (is_callable($callable) || (!is_string($callable) && $callable instanceof \Closure) || (is_string($callable) && function_exists($callable))) {
+        if (is_callable($callable) || (is_string($callable) && function_exists($callable))) {
             $reflectionFunction = new \ReflectionFunction($callable);
             return $reflectionFunction->invokeArgs($this->resolveArguments($reflectionFunction, $parameters));
         }
@@ -261,7 +261,8 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                         continue;
                     } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
                         if (!$parameter->isOptional() && !$parameter->allowsNull()) {
-                            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($parameter->getDeclaringClass() ? $parameter->getDeclaringClass()->getName() : 'N/A'), 0, $e);
+                            $declaringClass = $parameter->getDeclaringClass();
+                            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($declaringClass ? $declaringClass->getName() : 'N/A'), 0, $e);
                         }
 
                         $resolvedParameters[$parameter->getName()] = null;
@@ -277,7 +278,8 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                 }
             }
 
-            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . $parameter->getDeclaringClass()->getName());
+            $declaringClass = $parameter->getDeclaringClass();
+            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on entity ' . ($declaringClass ? $declaringClass->getName() : 'N/A'));
         }
 
         return $resolvedParameters;
