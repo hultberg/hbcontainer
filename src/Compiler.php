@@ -173,7 +173,7 @@ class Compiler
     private function resolveParameters(\ReflectionFunctionAbstract $function, array $extraParameters = [])
     {
         if ($this->argumentResolver === null) {
-            $this->argumentResolver = new ArgumentResolver($this->definitions);
+            $this->argumentResolver = new ArgumentResolver();
         }
         
         $resolvedParameters = $this->argumentResolver->resolve($function, $extraParameters);

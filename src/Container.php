@@ -38,7 +38,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         $this->definitionSource->setDefinition(FactoryInterface::class, new DefinitionReference(self::class));
         $this->definitionSource->setDefinition(InvokerInterface::class, new DefinitionReference(self::class));
         
-        $this->argumentResolver = $argumentResolver ?? new ArgumentResolver($this->definitionSource);
+        $this->argumentResolver = $argumentResolver ?? new ArgumentResolver();
         
         $argumentResolverClassName = get_class($this->argumentResolver);
         $this->definitionSource->setDefinition($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
