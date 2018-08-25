@@ -264,7 +264,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                 $resolvedParameters[$parameter->getName()] = $parameterValue;
                 continue;
             } else {
-                if ($type !== null && !$type->isBuiltin() && $this->classNameExists($type->getName())) {
+                if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
                     // We need to resolve a class. In php you cant pass a default class instance AFAIK
                     try {
                         $resolvedParameters[$parameter->getName()] = $this->get($type->getName());
@@ -293,24 +293,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         }
 
         return $resolvedParameters;
-    }
-
-    /**
-     * Determines if a classname exists. Able to handle interface, traits and classes.
-     *
-     * @param string $className
-     *
-     * @return bool
-     */
-    private function classNameExists($className): bool
-    {
-        try {
-            new \ReflectionClass($className);
-        } catch (\ReflectionException $e) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

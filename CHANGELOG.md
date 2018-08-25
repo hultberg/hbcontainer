@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.1
+
+* Fix unable to compile any function that had interface type-hinted in its arguments.
+
 ## v2.1.0
 
 * Add definition `value`, it can hold any value you provide it.

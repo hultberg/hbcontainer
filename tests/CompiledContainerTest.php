@@ -44,6 +44,21 @@ class CompiledContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
     }
     
+    public function testCompileFactoryWithInterfaceArgument()
+    {
+        $containerBuilder = new ContainerBuilder(new DefinitionSource([
+            Class2::class => factory(function(Interface1 $interface) {
+                return new Class1();
+            }),
+            Class100::class => resolve(),
+            Interface1::class => reference(Class100::class),
+        ]));
+        $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
+        $container = $containerBuilder->build();
+        
+        self::assertInstanceOf(Class1::class, $container->get(Class2::class));
+    }
+    
     public function testCompileFactory()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -187,4 +202,8 @@ class Class10 {
     function __construct(string $name) {
         $this->name = $name;
     }
+}
+
+class Class100 implements Interface1 {
+    
 }

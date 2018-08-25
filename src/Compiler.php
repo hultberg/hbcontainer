@@ -165,7 +165,7 @@ class Compiler
             if (!$parameter->isOptional()) {
                 $type = $parameter->getType();
                 
-                if ($type !== null && !$type->isBuiltin() && class_exists($type->getName())) {
+                if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
                     // a class we can, create a reference to it and compile.
                     $resolvedParameters[$name] = new DefinitionReference($type->getName());
                     continue;

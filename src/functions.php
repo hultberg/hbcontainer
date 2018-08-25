@@ -21,5 +21,10 @@ namespace HbLib\Container {
     {
         return new DefinitionValue($value);
     }
+    
+    function classNameExists($value): bool
+    {
+        return class_exists($value) || interface_exists($value);
+    }
 
 }

@@ -297,13 +297,7 @@ class ContainerTest extends TestCase
 
     public function testClassNameExists()
     {
-        $container = new Container();
-
-        $ref = new \ReflectionClass(Container::class);
-        $classExistsMethod = $ref->getMethod('classNameExists');
-        $classExistsMethod->setAccessible(true);
-
-        self::assertFalse($classExistsMethod->invoke($container, 'SomeClassThatDoNotExist'));
+        self::assertFalse(\HbLib\Container\classNameExists('SomeClassThatDoNotExist'));
     }
 
     public function testMakeNotSingleton()
