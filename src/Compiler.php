@@ -100,14 +100,14 @@ class Compiler
         
         if ($definition instanceof DefinitionReference) {
             // Reference to another definition.
-            $className = $definition->getClassName();
+            $entryName = $definition->getEntryName();
             
             // Ensure we compile this definition too.
-            if (!isset($this->definitionsToCompile[$className])) {
-                $this->definitionsToCompile[$className] = null;
+            if (!isset($this->definitionsToCompile[$entryName])) {
+                $this->definitionsToCompile[$entryName] = null;
             }
             
-            $code = 'return $this->get(' . $this->compileValue($className) . ');';
+            $code = 'return $this->get(' . $this->compileValue($entryName) . ');';
             $this->methods[$methodName] = $code;
         } else if ($definition instanceof DefinitionFactory) {
             // Reference to another definition.
@@ -139,6 +139,9 @@ class Compiler
             }
             
             $code = 'return new ' . $className . '(' . $parametersString . ');';
+            $this->methods[$methodName] = $code;
+        } else if ($definition instanceof DefinitionValue) {
+            $code = 'return ' . $this->compileValue($definition->getValue()) . ';';
             $this->methods[$methodName] = $code;
         }
         

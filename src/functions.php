@@ -16,5 +16,10 @@ namespace HbLib\Container {
     {
         return new DefinitionReference($key);
     }
+    
+    function value($value): DefinitionValue
+    {
+        return new DefinitionValue($value);
+    }
 
 }

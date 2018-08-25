@@ -161,9 +161,26 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             unset($this->entriesBeingResolved[$id]);
         }
     }
+    
+    private function resolveValue($value, $referencedEntryName)
+    {
+        if ($value instanceof AbstractDefinition) {
+            return $this->resolveDefinition($value, $referencedEntryName);
+        }
+        
+        return $value;
+    }
 
     private function resolveDefinition(AbstractDefinition $definition, $requestedId)
     {
+        if ($definition instanceof DefinitionValue) {
+            return $this->resolveValue($definition->getValue(), $requestedId);
+        }
+        
+        if ($definition instanceof DefinitionReference) {
+            return $this->get($definition->getEntryName());
+        }
+        
         if ($definition instanceof DefinitionFactory) {
             // TODO: We should just use call_user_func_array here.
             $function = new \ReflectionFunction($definition->getClosure());
@@ -180,10 +197,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
 
             // No parameters, we can just "get" the class.
             return $this->resolveClass($className);
-        }
-        
-        if ($definition instanceof DefinitionReference) {
-            return $this->get($definition->getClassName());
         }
 
         // @codeCoverageIgnoreStart

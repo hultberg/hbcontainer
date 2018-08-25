@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
 use function HbLib\Container\reference;
 use function HbLib\Container\resolve;
+use function HbLib\Container\value;
 
 class CompiledContainerTest extends TestCase
 {
@@ -65,6 +66,36 @@ class CompiledContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
         self::assertInstanceOf(Class10::class, $container->get(Class10::class));
         self::assertSame('string', $container->get(Class10::class)->name);
+    }
+    
+    public function testCompileValue()
+    {
+        $containerBuilder = new ContainerBuilder(new DefinitionSource([
+            'key1' => value('value1'),
+            'key2' => value(['array1', 'array2']),
+            'key3' => value(true),
+            'key4' => value(false),
+            'key5' => value('1'),
+            'key6' => value(2),
+            'key7' => value(2.0),
+            'key8' => value(reference('key1')),
+            'key9' => reference('key2'),
+        ]));
+        $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
+        
+        $container = $containerBuilder->build();
+        
+        self::assertSame('value1', $container->get('key1'));
+        self::assertSame('value1', $container->get('key8'));
+        self::assertInternalType('array', $container->get('key2'));
+        self::assertArraySubset(['array1', 'array2'], $container->get('key2'));
+        self::assertTrue($container->get('key3'));
+        self::assertFalse($container->get('key4'));
+        self::assertSame('1', $container->get('key5'));
+        self::assertSame(2, $container->get('key6'));
+        self::assertSame(2.0, $container->get('key7'));
+        self::assertInternalType('array', $container->get('key9'));
+        self::assertArraySubset(['array1', 'array2'], $container->get('key9'));
     }
     
     public function testCompileFailParameter()

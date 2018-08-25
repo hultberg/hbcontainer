@@ -7,26 +7,21 @@ class DefinitionReference extends AbstractDefinition
     /**
      * @var string
      */
-    private $className;
+    private $entryName;
 
     /**
      * @inheritDoc
      */
-    public function __construct($className)
+    public function __construct($entryName)
     {
-        $this->className = $className;
+        $this->entryName = $entryName;
     }
 
     /**
      * @return string
      */
-    public function getClassName(): string
+    public function getEntryName(): string
     {
-        return $this->className;
-    }
-    
-    public function getTypeName(): string
-    {
-        return 'reference';
+        return $this->entryName;
     }
 }

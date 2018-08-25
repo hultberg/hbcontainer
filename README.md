@@ -17,7 +17,7 @@ HbContainer uses `definitions` to define entries to be resolved by the container
 
 ## Getting entries
 
-The HbContainer has two primary methods to get entries:
+The HbContainer has three primary methods to get/call entries:
 
 1. `get`: Resolve and runtime-caches the resolved value for the next call.
 1. `make`: Always resolve and return a new instance.
@@ -27,7 +27,8 @@ The HbContainer takes an `DefinitionSource` that contains several definitions th
 
 1. `DefinitionFactory`: An definition with an closure to return the item in its final state. The result is added to the singleton cache. Helper function: `\HbLib\Container\factory`
 2. `DefinitionClass`: An definition to construct a class with or without provided parameters. If any parameters are defined, the class is never runtime-cached. Helper function: `\HbLib\Container\resolve`. Its optional to provide an class to this definition, and if none is provided it will assume the definition ID (index of the definition array) is the class name. See usage example below.
-2. `DefinitionReference`: An definition to reference another `DefinitionClass`, you may not provide parameters to this definition. Helper function: `\HbLib\Container\reference`.
+2. `DefinitionReference`: An definition to reference another definition entry, you may not provide parameters to this definition. Helper function: `\HbLib\Container\reference`.
+2. `DefinitionValue`: An definition to return some value. The value itself can be another definition. Helper function: `\HbLib\Container\value`.
 
 ## Interfaces
 

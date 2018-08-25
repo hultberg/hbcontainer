@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.0
+
+* Add definition `value`, it can hold any value you provide it.
+* Change definition `reference` to reference any definition entry, not just classes.
+
 ## v2.0.0
 
 * Implement compiling container with all defined definitions

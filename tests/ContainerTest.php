@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
 use function HbLib\Container\resolve;
 use function HbLib\Container\reference;
+use function HbLib\Container\value;
 
 class ContainerTest extends TestCase
 {
@@ -23,6 +24,35 @@ class ContainerTest extends TestCase
             'key' => 'value',
         ]));
         self::assertEquals('value', $container->get('key'));
+    }
+    
+    public function testReferenceToNonClass()
+    {
+        $container = new Container(new DefinitionSource([
+            'key' => 'value',
+            'someKey' => reference('key'),
+        ]));
+        
+        self::assertEquals('value', $container->get('someKey'));
+    }
+    
+    public function testValue()
+    {
+        $container = new Container(new DefinitionSource([
+            'someKey' => value('key'),
+        ]));
+        
+        self::assertEquals('key', $container->get('someKey'));
+    }
+    
+    public function testValueAnotherDefinition()
+    {
+        $container = new Container(new DefinitionSource([
+            'key' => 'value',
+            'someKey' => value(reference('key')),
+        ]));
+        
+        self::assertEquals('value', $container->get('someKey'));
     }
 
     public function testGetFactory()
