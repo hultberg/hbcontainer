@@ -61,6 +61,20 @@ class CompiledContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
     }
     
+    public function testCompileNotDefinitionClass()
+    {
+        $source = new DefinitionSource([
+            Interface1::class => reference(Class1::class),
+            Class2::class => resolve(),
+        ]);
+        $containerBuilder = new ContainerBuilder($source);
+        $containerBuilder->enableCompiling($this->createTempFile());
+        $container = $containerBuilder->build();
+    
+        self::assertInstanceOf(Class1::class, $container->get(Interface1::class));
+        self::assertInstanceOf(Class2::class, $container->get(Class2::class));
+    }
+    
     public function testCompileNonDefinitions()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
