@@ -118,4 +118,6 @@ The container supports compiling all resolved definitions in runtime to increase
 
 ### Limitations
 
-All definition types are supported when used with the helper functions.
+Only definition types are compiled into the resulting file, all other entries are just resolved from the definition source.
+
+Closures are not included in the compiled container and is resolved and called in runtime with the definition entry ID.
