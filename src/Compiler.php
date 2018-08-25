@@ -207,7 +207,9 @@ class Compiler
                     continue;
                 }
                 
-                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . '');
+                // Something is wrong... might be an interface that has no definition entry.
+                // It might be set in runtime so just let the container compile it.
+                $resolvedParameters[key($resolvedParameters)] = new DefinitionReference($typeHint);
             } while (next($resolvedParameters));
         }
         

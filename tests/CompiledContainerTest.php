@@ -4,6 +4,7 @@ namespace HbLib\Container\Tests;
 
 use HbLib\Container\ContainerBuilder;
 use HbLib\Container\DefinitionSource;
+use HbLib\Container\InvokerInterface;
 use HbLib\Container\UnresolvedContainerException;
 use PHPUnit\Framework\TestCase;
 use function HbLib\Container\factory;
@@ -216,6 +217,21 @@ class CompiledContainerTest extends TestCase
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
             SessionClass::class => resolve(),
+        ]));
+        
+        $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
+        $container = $containerBuilder->build();
+        
+        self::assertInstanceOf(SessionClass::class, $container->get(SessionClass::class));
+        self::assertNull($container->get(SessionClass::class)->bag);
+    }
+    
+    public function testResolveInvoker()
+    {
+        $containerBuilder = new ContainerBuilder(new DefinitionSource([
+            SessionClass::class => factory(function(InvokerInterface $invoker) {
+                return new SessionClass();
+            }),
         ]));
         
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
