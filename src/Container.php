@@ -294,7 +294,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                     continue;
                 }
                 
-                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . '', 0, $previousException);
+                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . ' on class ' . ($argument->getDeclaringClassName() ?? 'N/A'), 0, $previousException);
             } while (next($resolvedParameters));
         }
 

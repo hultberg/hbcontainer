@@ -325,7 +325,7 @@ class ContainerTest extends TestCase
         // definitions so the parameter resolving must throw an exception.
 
         $this->expectException(UnresolvedContainerException::class);
-        $this->expectExceptionMessage('Unable to resolve parameter interface on entity HbLib\Container\Tests\Class2RequireInterface1');
+        $this->expectExceptionMessage('Unable to resolve parameter interface on class HbLib\Container\Tests\Class2RequireInterface1');
 
         $container = new Container();
         $container->make(Class2RequireInterface1::class);

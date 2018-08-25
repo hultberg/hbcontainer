@@ -39,6 +39,11 @@ class Argument
     private $defaultValue;
     
     /**
+     * @var string|null
+     */
+    private $declaringClassName;
+    
+    /**
      * @param string $name
      * @param string|null $typeHintClassName
      * @param bool   $isOptional
@@ -55,6 +60,23 @@ class Argument
         $this->isOptional = $isOptional;
         $this->defaultValue = $defaultValue;
         $this->isResolved = false;
+        $this->declaringClassName = null;
+    }
+    
+    /**
+     * @return string|null
+     */
+    public function getDeclaringClassName(): ?string
+    {
+        return $this->declaringClassName;
+    }
+    
+    /**
+     * @param string|null $declaringClassName
+     */
+    public function setDeclaringClassName(?string $declaringClassName): void
+    {
+        $this->declaringClassName = $declaringClassName;
     }
     
     /**
