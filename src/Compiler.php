@@ -167,11 +167,6 @@ class Compiler
         return $resolvedParameters;
     }
     
-    private function compileSingleParameter(\ReflectionParameter $parameter, ?AbstractDefinition $classDefinition)
-    {
-        
-    }
-    
     private function compileValue($value)
     {
         if ($value instanceof AbstractDefinition) {
