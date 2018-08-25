@@ -106,7 +106,7 @@ class Compiler
         
             $factory            = $definition->getClosure();
             $reflectionFunction = new \ReflectionFunction($factory);
-            $resolvedParameters = $this->resolveParameters($reflectionFunction->getParameters(), $definition->getParameters(), true);
+            $resolvedParameters = $this->resolveParameters($reflectionFunction->getParameters(), $definition->getParameters());
         
             $parametersString = '';
             if (!empty($resolvedParameters)) {
@@ -125,7 +125,7 @@ class Compiler
             
             $parametersString = '';
             if ($constructor !== null) {
-                $resolvedParameters = $this->resolveParameters($constructor->getParameters(), $definedParameters);
+                $resolvedParameters = array_values($this->resolveParameters($constructor->getParameters(), $definedParameters));
                 $compiledResolvedParameters = array_map([$this, 'compileValue'], $resolvedParameters);
                 $parametersString = implode(',', $compiledResolvedParameters);
             }
@@ -137,7 +137,7 @@ class Compiler
         return $methodName;
     }
     
-    private function resolveParameters(array $parameters, array $extraParameters = [], bool $parameterNameAsIndex = false)
+    private function resolveParameters(array $parameters, array $extraParameters = [])
     {
         $resolvedParameters = [];
         
@@ -147,8 +147,7 @@ class Compiler
             if (array_key_exists($parameter->getName(), $extraParameters)) {
                 $extraParametersValue = $extraParameters[$parameter->getName()];
                 
-                if ($parameterNameAsIndex) $resolvedParameters[$name] = $extraParametersValue;
-                else $resolvedParameters[] = $extraParametersValue;
+                $resolvedParameters[$name] = $extraParametersValue;
                 continue;
             }
             
@@ -157,8 +156,7 @@ class Compiler
                 
                 if ($type !== null && !$type->isBuiltin() && class_exists($type->getName())) {
                     // a class we can, create a reference to it and compile.
-                    if ($parameterNameAsIndex) $resolvedParameters[$name] = new DefinitionReference($type->getName());
-                    else $resolvedParameters[] = new DefinitionReference($type->getName());
+                    $resolvedParameters[$name] = new DefinitionReference($type->getName());
                     continue;
                 }
             }
