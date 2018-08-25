@@ -1,6 +1,6 @@
 # Changelog
 
-## (unreleased)
+## v2.0.0
 
 * Implement compiling container with all defined definitions
 * Rename helper function `\HbLib\Container\get` to `\HbLib\Container\resolve`
