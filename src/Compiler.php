@@ -80,7 +80,7 @@ class Compiler
         return $this->fileInfo->getPathname();
     }
     
-    private function compileDefinition(string $entryName, AbstractDefinition $definition)
+    private function compileDefinition($entryName, AbstractDefinition $definition)
     {
         // Already compiled the entry?
         if (isset($this->entryToMethods[$entryName])) {

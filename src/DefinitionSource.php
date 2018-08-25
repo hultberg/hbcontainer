@@ -27,17 +27,17 @@ class DefinitionSource
         return $this->definitions;
     }
     
-    public function hasDefinition(string $id): bool
+    public function hasDefinition($id): bool
     {
         return array_key_exists($id, $this->definitions);
     }
     
-    public function getDefinition(string $id)
+    public function getDefinition($id)
     {
         return $this->definitions[$id] ?? null;
     }
     
-    public function setDefinition(string $id, $value): void
+    public function setDefinition($id, $value): void
     {
         $this->definitions[$id] = $value;
     }
