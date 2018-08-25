@@ -162,14 +162,15 @@ class Compiler
                 continue;
             }
             
-            if (!$parameter->isOptional()) {
-                $type = $parameter->getType();
-                
-                if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
-                    // a class we can, create a reference to it and compile.
-                    $resolvedParameters[$name] = new DefinitionReference($type->getName());
-                    continue;
-                }
+            $type = $parameter->getType();
+            
+            if ($type !== null && !$type->isBuiltin() && \HbLib\Container\classNameExists($type->getName())) {
+                // a class we can, create a reference to it and compile.
+                $resolvedParameters[$name] = new DefinitionReference($type->getName());
+                continue;
+            } else if ($parameter->isOptional()) {
+                $resolvedParameters[$name] = $parameter->getDefaultValue();
+                continue;
             }
             
             throw new \RuntimeException('Failed to compile a single parameter');

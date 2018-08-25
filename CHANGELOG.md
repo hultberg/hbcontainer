@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.2
+
+* Fix unable to compile optional arguments
+
 ## v2.1.1
 
 * Fix unable to compile any function that had interface type-hinted in its arguments.

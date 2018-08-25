@@ -59,6 +59,21 @@ class CompiledContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $container->get(Class2::class));
     }
     
+    public function testCompileOptionalArguments()
+    {
+        $containerBuilder = new ContainerBuilder(new DefinitionSource([
+            Class1::class => resolve(),
+            Class200::class => resolve(),
+        ]));
+        $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
+        $container = $containerBuilder->build();
+        
+        self::assertInstanceOf(Class200::class, $container->get(Class200::class));
+        self::assertNull($container->get(Class200::class)->someString);
+        self::assertSame('12', $container->get(Class200::class)->moreStrings);
+        self::assertInstanceOf(Class1::class, $container->get(Class1::class));
+    }
+    
     public function testCompileFactory()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -206,4 +221,16 @@ class Class10 {
 
 class Class100 implements Interface1 {
     
+}
+
+class Class200 {
+    public $class;
+    public $someString;
+    public $moreStrings;
+    
+    function __construct(Class1 $class1, $someString = null, $moreStrings = '12') {
+        $this->class = $class1;
+        $this->someString = $someString;
+        $this->moreStrings = $moreStrings;
+    }
 }
