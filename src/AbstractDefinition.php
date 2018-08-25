@@ -2,9 +2,7 @@
 
 namespace HbLib\Container;
 
-use Closure;
-use ReflectionFunction;
-
 abstract class AbstractDefinition
 {
+    abstract public function getTypeName(): string;
 }

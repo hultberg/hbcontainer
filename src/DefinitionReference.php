@@ -24,4 +24,9 @@ class DefinitionReference extends AbstractDefinition
     {
         return $this->className;
     }
+    
+    public function getTypeName(): string
+    {
+        return 'reference';
+    }
 }
