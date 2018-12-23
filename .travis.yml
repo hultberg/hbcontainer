@@ -3,9 +3,10 @@ language: php
 php:
     - '7.1'
     - '7.2'
+    - '7.3'
     - nightly
-    
+
 install: composer install --no-progress
-script: 
+script:
     - vendor/bin/phpstan analyse --no-progress -l 7 -c ./phpstan.neon src tests
     - php -d "zend_extension=xdebug" vendor/bin/phpunit --coverage-text
