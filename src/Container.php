@@ -2,6 +2,15 @@
 
 namespace HbLib\Container;
 
+use function count;
+use Ds\Collection;
+use Ds\Map;
+use Ds\Set;
+use function function_exists;
+use function is_array;
+use function is_callable;
+use function is_object;
+use function is_string;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -9,7 +18,7 @@ use Psr\Container\NotFoundExceptionInterface;
 class Container implements ContainerInterface, FactoryInterface, InvokerInterface
 {
     /**
-     * @var array
+     * @var Map
      */
     protected $singletons;
 
@@ -17,12 +26,12 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * @var DefinitionSource
      */
     protected $definitionSource;
-    
+
     /**
-     * @var array
+     * @var Set
      */
     protected $entriesBeingResolved;
-    
+
     /**
      * @var ArgumentResolverInterface
      */
@@ -30,22 +39,22 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
 
     public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
     {
-        $this->singletons = [];
-        $this->entriesBeingResolved = [];
-        
+        $this->singletons = new Map();
+        $this->entriesBeingResolved = new Set();
+
         $this->definitionSource = $definitionSource ?? new DefinitionSource();
         $this->definitionSource->setDefinition(ContainerInterface::class, new DefinitionReference(self::class));
         $this->definitionSource->setDefinition(FactoryInterface::class, new DefinitionReference(self::class));
         $this->definitionSource->setDefinition(InvokerInterface::class, new DefinitionReference(self::class));
-        
+
         $this->argumentResolver = $argumentResolver ?? new ArgumentResolver();
-        
+
         $argumentResolverClassName = get_class($this->argumentResolver);
         $this->definitionSource->setDefinition($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
         $this->definitionSource->setDefinition(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
 
         // Register the container itself.
-        $this->singletons[self::class] = $this;
+        $this->singletons->put(self::class, $this);
     }
 
     /**
@@ -62,19 +71,19 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function get($id)
     {
-        if (!isset($this->singletons[$id])) {
+        if (!$this->singletons->hasKey($id)) {
             // Attempt to build the $id class
-            $this->singletons[$id] = $this->make($id);
+            $this->singletons->put($id, $this->make($id));
         }
 
-        return $this->singletons[$id];
+        return $this->singletons->get($id);
     }
 
     /**
      * Call the given function using the given parameters.
      *
      * @param callable|array|string|\Closure $callable Function to call.
-     * @param array $parameters Parameters to use.
+     * @param null|Map|array $parameters Parameters to use.
      *
      * @return mixed Result of the function.
      *
@@ -82,8 +91,11 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * @throws UnresolvedContainerException
      * @throws \ReflectionException
      */
-    public function call($callable, array $parameters = array())
+    public function call($callable, $parameters = null)
     {
+        if (is_array($parameters)) $parameters = new Map($parameters);
+        else if (!($parameters instanceof Map)) $parameters = null;
+
         if (is_array($callable)) {
             list($class, $method) = $callable;
             $classInstance = null;
@@ -105,12 +117,12 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                 throw new InvokeException('Method ' . $method . ' does not exist on class', 0, $e);
             }
 
-            return $method->invokeArgs($classInstance, $this->resolveArguments($method, $parameters));
+            return $method->invokeArgs($classInstance, $this->resolveArguments($method, $parameters)->toArray());
         }
 
         if (is_callable($callable) || (is_string($callable) && function_exists($callable))) {
             $function = new \ReflectionFunction($callable);
-            return $function->invokeArgs($this->resolveArguments($function, $parameters));
+            return $function->invokeArgs($this->resolveArguments($function, $parameters)->toArray());
         }
 
         throw new InvokeException('Unsupported format.');
@@ -127,7 +139,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if ($value instanceof AbstractDefinition) {
             $this->definitionSource->setDefinition($id, $value);
         } else {
-            $this->singletons[$id] = $value;
+            $this->singletons->put($id, $value);
         }
     }
 
@@ -137,31 +149,34 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * @see get()
      *
      * @param string $id
-     * @param array $parameters
+     * @param array|Map|null $parameters
      *
      * @return mixed
      *
      * @throws NotFoundExceptionInterface
      * @throws UnresolvedContainerException
      */
-    public function make(string $id, array $parameters = array())
+    public function make(string $id, $parameters = null)
     {
+        if (is_array($parameters)) $parameters = new Map($parameters);
+        else if (!($parameters instanceof Map)) $parameters = null;
+
         $definition = $this->definitionSource->getDefinition($id);
-        
-        if (isset($this->entriesBeingResolved[$id])) {
+
+        if ($this->entriesBeingResolved->contains($id)) {
             throw new CircularDependencyException('Circular dependency detected while resolving entry ' . $id);
         }
-        $this->entriesBeingResolved[$id] = true;
-        
+        $this->entriesBeingResolved->add($id);
+
         try {
             if ($definition instanceof AbstractDefinition) {
                 return $this->resolveDefinition($definition, $id);
             }
-        
+
             if (is_callable($definition)) {
                 return $this->call($definition);
             }
-            
+
             if ($definition !== null) {
                 // Return whatever...
                 return $definition;
@@ -169,16 +184,16 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
 
             return $this->resolveClass($id, $parameters);
         } finally {
-            unset($this->entriesBeingResolved[$id]);
+            $this->entriesBeingResolved->remove($id);
         }
     }
-    
+
     private function resolveValue($value, $referencedEntryName)
     {
         if ($value instanceof AbstractDefinition) {
             return $this->resolveDefinition($value, $referencedEntryName);
         }
-        
+
         return $value;
     }
 
@@ -187,15 +202,15 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if ($definition instanceof DefinitionValue) {
             return $this->resolveValue($definition->getValue(), $requestedId);
         }
-        
+
         if ($definition instanceof DefinitionReference) {
             return $this->get($definition->getEntryName());
         }
-        
+
         if ($definition instanceof DefinitionFactory) {
             // TODO: We should just use call_user_func_array here.
             $function = new \ReflectionFunction($definition->getClosure());
-            return $function->invokeArgs($this->resolveArguments($function, $definition->getParameters()));
+            return $function->invokeArgs($this->resolveArguments($function, $definition->getParameters())->toArray());
         }
 
         if ($definition instanceof DefinitionClass) {
@@ -217,12 +232,12 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
 
     /**
      * Construct a class instance and resolve all parameters not provided in the parameters array.
-     * 
-     * @param string $className  
-     * @param array  $parameters 
+     *
+     * @param string $className
+     * @param null|Map  $parameters
      * @return mixed
      */
-    private function resolveClass(string $className, array $parameters = [])
+    private function resolveClass(string $className, Map $parameters = null)
     {
         try {
             $reflection = new \ReflectionClass($className);
@@ -243,59 +258,54 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if ($constructor === null) {
             return new $className(); // No constructor.
         }
-        
-        return $reflection->newInstanceArgs($this->resolveArguments($constructor, $parameters));
+
+        return $reflection->newInstanceArgs($this->resolveArguments($constructor, $parameters)->toArray());
     }
 
     /**
      * Resolve parameters of a reflection function.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param array $arguments
+     * @param null|Map $arguments
      *
-     * @return array
+     * @return Collection
      *
      * @throws UnresolvedContainerException
      */
-    public function resolveArguments(\ReflectionFunctionAbstract $function, array $arguments = array()): array
+    public function resolveArguments(\ReflectionFunctionAbstract $function, Map $arguments = null): Collection
     {
-        $resolvedParameters = $this->argumentResolver->resolve($function, $arguments);
-        
-        if (!empty($resolvedParameters)) {
-            reset($resolvedParameters);
-            
-            // Loop over and resolve each argument via the container.
-            do {
-                $previousException = null;
-                
-                /** @var Argument $argument */
-                $argument = current($resolvedParameters);
-                
-                // Case #1: Did someone provide a value?
-                if ($argument->isResolved()) {
-                    $resolvedParameters[key($resolvedParameters)] = $this->resolveValue($argument->getValue(), $argument->getName());
+        $resolvedParameters = new Map();
+        $parameters = $this->argumentResolver->resolve($function, $arguments);
+
+        foreach ($parameters as $parameter) {
+            /** @var Argument $parameter */
+
+            $previousException = null;
+
+            // Case #1: Did someone provide a value?
+            if ($parameter->isResolved()) {
+                $resolvedParameters->put($parameter->getName(), $this->resolveValue($parameter->getValue(), $parameter->getName()));
+                continue;
+            }
+
+            // Case #2: Definition entry ID as typehint?
+            $typeHint = $parameter->getTypeHintClassName();
+            if ($typeHint !== null) {
+                try {
+                    $resolvedParameters->put($parameter->getName(), $this->get($typeHint));
                     continue;
+                } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+                    $previousException = $e; // Don't report now, we might have an optional value to use.
                 }
-                
-                // Case #2: Definition entry ID as typehint?
-                $typeHint = $argument->getTypeHintClassName();
-                if ($typeHint !== null) {
-                    try {
-                        $resolvedParameters[key($resolvedParameters)] = $this->get($typeHint);
-                        continue;
-                    } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-                        $previousException = $e; // Don't report now, we might have an optional value to use.
-                    }
-                }
-                
-                // Case #3: Optional?
-                if ($argument->isOptional()) {
-                    $resolvedParameters[key($resolvedParameters)] = $argument->getDefaultValue();
-                    continue;
-                }
-                
-                throw new UnresolvedContainerException('Unable to resolve parameter ' . $argument->getName() . ' on class ' . ($argument->getDeclaringClassName() ?? 'N/A'), 0, $previousException);
-            } while (next($resolvedParameters));
+            }
+
+            // Case #3: Optional?
+            if ($parameter->isOptional()) {
+                $resolvedParameters->put($parameter->getName(), $parameter->getDefaultValue());
+                continue;
+            }
+
+            throw new UnresolvedContainerException('Unable to resolve parameter ' . $parameter->getName() . ' on class ' . ($parameter->getDeclaringClassName() ?? 'N/A'), 0, $previousException);
         }
 
         return $resolvedParameters;

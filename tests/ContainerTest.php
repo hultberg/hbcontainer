@@ -5,7 +5,6 @@ namespace HbLib\Container\Tests;
 use HbLib\Container\DefinitionSource;
 use HbLib\Container\ContainerException;
 use HbLib\Container\CircularDependencyException;
-
 use Psr\Container\NotFoundExceptionInterface;
 use HbLib\Container\Container;
 use HbLib\Container\InvokeException;

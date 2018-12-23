@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.0
+
+* Change all usage of arrays to use php-ds collection objects. The container project therefor now requires the php-ds package.
+
 ## v2.1.3
 
 * Fix unable to compile optional interface arguments and runtime defined definitions.

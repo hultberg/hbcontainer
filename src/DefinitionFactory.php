@@ -3,6 +3,8 @@
 namespace HbLib\Container;
 
 use Closure;
+use Ds\Map;
+use mysql_xdevapi\Collection;
 
 class DefinitionFactory extends AbstractDefinition
 {
@@ -10,49 +12,32 @@ class DefinitionFactory extends AbstractDefinition
      * @var Closure
      */
     private $closure;
-    
+
     /**
-     * @var array
+     * @var Map
      */
     private $parameters;
 
-    /**
-     * @param Closure $closure
-     */
     public function __construct(Closure $closure)
     {
         $this->closure = $closure;
-        $this->parameters = [];
+        $this->parameters = new Map();
     }
 
-    public static function fromCallable($callable)
-    {
-        if (is_array($callable)) {
-            $callable = function(InvokerInterface $invoker) use ($callable) {
-                return $invoker->call($callable);
-            };
-        }
-
-        return new self(Closure::fromCallable($callable));
-    }
-
-    /**
-     * @return Closure
-     */
     public function getClosure(): Closure
     {
         return $this->closure;
     }
-    
-    public function getParameters(): array
+
+    public function getParameters(): Map
     {
         return $this->parameters;
     }
-    
+
     public function parameter(string $name, $value)
     {
-        $this->parameters[$name] = $value;
-        
+        $this->parameters->put($name, $value);
+
         return $this;
     }
 }

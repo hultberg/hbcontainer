@@ -1,44 +1,47 @@
 <?php
 
-declare(strict_types=1);        
+declare(strict_types=1);
 
 namespace HbLib\Container;
+
+use Ds\Map;
+use OutOfBoundsException;
 
 class DefinitionSource
 {
     /**
-     * @var array
+     * @var Map
      */
     private $definitions;
-    
+
     /**
      * @param array $definitions
      */
     public function __construct(array $definitions = [])
     {
-        $this->definitions = $definitions;
+        $this->definitions = new Map($definitions);
     }
-    
+
     /**
-     * @return array
+     * @return Map
      */
-    public function getDefinitions(): array
+    public function getDefinitions(): Map
     {
         return $this->definitions;
     }
-    
+
     public function hasDefinition($id): bool
     {
-        return array_key_exists($id, $this->definitions);
+        return $this->definitions->hasKey($id);
     }
-    
+
     public function getDefinition($id)
     {
-        return $this->definitions[$id] ?? null;
+        return $this->definitions->get($id, null);
     }
-    
+
     public function setDefinition($id, $value): void
     {
-        $this->definitions[$id] = $value;
+        $this->definitions->put($id, $value);
     }
 }

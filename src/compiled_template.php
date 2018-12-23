@@ -6,17 +6,21 @@
  */
 ?>
 
-class <?php echo ltrim($this->compiledClassName, '\\'); ?> extends <?php echo $this->compiledParentClassName; ?> 
+final class <?php echo ltrim($this->compiledClassName, '\\'); ?> extends <?php echo $this->compiledParentClassName; ?>
 {
-    const METHOD_MAPPING = <?php var_export($this->entryToMethods); ?>;
-    
-<?php foreach ($this->methods as $methodName => $content): ?>
-    protected function <?php echo $methodName; ?>()
-    {
-        <?php echo $content; ?>
-        
+    protected function _initialize(): void {
+        parent::_initialize();
+
+        $this->methodMapping = new \Ds\Map(<?php var_export($this->entryToMethods->toArray()); ?>);
     }
-    
+
+<?php foreach ($this->methods as $method): ?>
+    protected function <?php echo $method->getName(); ?>()
+    {
+        <?php echo $method->getContent(); ?>
+
+    }
+
 <?php endforeach; ?>
 
 }

@@ -2,7 +2,6 @@ parameters:
 	excludes_analyse:
 		- %currentWorkingDirectory%/src/compiled_template.php
 	ignoreErrors:
-		- '#Access to undefined constant HbLib\\Container\\CompiledContainer::METHOD_MAPPING.#'
 		- '#PHPDoc tag \@throws with type Psr\\Container\\ContainerExceptionInterface is not subtype of Throwable#'
 		- '#PHPDoc tag \@throws with type HbLib\\Container\\UnresolvedContainerException\|Psr\\Container\\NotFoundExceptionInterface is not subtype of Throwable#'
 		- '#Parameter \#1 \$name of class ReflectionFunction constructor expects Closure\|string, callable\|string given\.#'
