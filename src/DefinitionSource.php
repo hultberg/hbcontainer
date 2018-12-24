@@ -7,22 +7,66 @@ namespace HbLib\Container;
 use Ds\Map;
 use OutOfBoundsException;
 
-class DefinitionSource
+class DefinitionSource implements \Countable, \IteratorAggregate
 {
     /**
      * @var Map
      */
     private $definitions;
 
-    /**
-     * @param array $definitions
-     */
-    public function __construct(array $definitions = [])
+    public function __construct(Map $definitions = null)
     {
-        $this->definitions = new Map($definitions);
+        $this->definitions = $definitions ?? new Map();
     }
 
     /**
+     * @param string|mixed $id
+     * @param AbstractDefinition|mixed $value
+     */
+    public function set($id, $value): void
+    {
+        $this->definitions->put($id, $value);
+    }
+
+    /**
+     * @param string|mixed $id
+     * @return AbstractDefinition|mixed
+     */
+    public function get($id)
+    {
+        return $this->definitions->get($id, null);
+    }
+
+    /**
+     * @param string|mixed $id
+     * @return bool
+     */
+    public function has($id): bool
+    {
+        return $this->definitions->hasKey($id);
+    }
+
+    /**
+     * @return Map
+     */
+    public function all(): Map
+    {
+        return $this->definitions;
+    }
+
+    public function count()
+    {
+        return $this->definitions->count();
+    }
+
+    public function getIterator()
+    {
+        return $this->definitions->getIterator();
+    }
+
+    /**
+     * @deprecated
+     * @see all()
      * @return Map
      */
     public function getDefinitions(): Map
@@ -30,16 +74,34 @@ class DefinitionSource
         return $this->definitions;
     }
 
+    /**
+     * @deprecated
+     * @see has()
+     * @param mixed $id
+     * @return bool
+     */
     public function hasDefinition($id): bool
     {
         return $this->definitions->hasKey($id);
     }
 
+    /**
+     * @deprecated
+     * @see get()
+     * @param mixed $id
+     * @return mixed
+     */
     public function getDefinition($id)
     {
         return $this->definitions->get($id, null);
     }
 
+    /**
+     * @deprecated Deprecated in favour of set()
+     * @see set()
+     * @param $id
+     * @param $value
+     */
     public function setDefinition($id, $value): void
     {
         $this->definitions->put($id, $value);

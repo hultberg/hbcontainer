@@ -67,7 +67,7 @@ class Compiler
         // Compile the container if we have not already done it.
         if (!$this->fileInfo->isFile()) {
             $this->definitions = $definitions;
-            $this->definitionsToCompile = new Queue($definitions->getDefinitions()->map(function(string $id, $value): CompiledEntry {
+            $this->definitionsToCompile = new Queue($definitions->all()->map(function(string $id, $value): CompiledEntry {
                 return new CompiledEntry($id, $value);
             }));
 
@@ -79,7 +79,7 @@ class Compiler
 
                 // We might have added an definition as it it did not exist.
                 if ($definition === null) {
-                    $definition = $definitions->getDefinition($id);
+                    $definition = $definitions->get($id);
                 }
 
                 // Compile a definition.
@@ -207,7 +207,7 @@ class Compiler
             if ($typeHint !== null) {
                 $class = new \ReflectionClass($typeHint);
 
-                if ($class->isInstantiable() || $this->definitions->hasDefinition($typeHint)) {
+                if ($class->isInstantiable() || $this->definitions->has($typeHint)) {
                     $resolvedParameters->put($parameter->getName(), new DefinitionReference($typeHint));
                     continue;
                 }

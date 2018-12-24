@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.1
+
+* Fix DefinitionSource requirement to be Map, not array.
+
 ## v3.0.0
 
 * Change all usage of arrays to use php-ds collection objects. The container project therefor now requires the php-ds package.

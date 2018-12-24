@@ -43,15 +43,15 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         $this->entriesBeingResolved = new Set();
 
         $this->definitionSource = $definitionSource ?? new DefinitionSource();
-        $this->definitionSource->setDefinition(ContainerInterface::class, new DefinitionReference(self::class));
-        $this->definitionSource->setDefinition(FactoryInterface::class, new DefinitionReference(self::class));
-        $this->definitionSource->setDefinition(InvokerInterface::class, new DefinitionReference(self::class));
+        $this->definitionSource->set(ContainerInterface::class, new DefinitionReference(self::class));
+        $this->definitionSource->set(FactoryInterface::class, new DefinitionReference(self::class));
+        $this->definitionSource->set(InvokerInterface::class, new DefinitionReference(self::class));
 
         $this->argumentResolver = $argumentResolver ?? new ArgumentResolver();
 
         $argumentResolverClassName = get_class($this->argumentResolver);
-        $this->definitionSource->setDefinition($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
-        $this->definitionSource->setDefinition(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
+        $this->definitionSource->set($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
+        $this->definitionSource->set(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
 
         // Register the container itself.
         $this->singletons->put(self::class, $this);
@@ -161,7 +161,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if (is_array($parameters)) $parameters = new Map($parameters);
         else if (!($parameters instanceof Map)) $parameters = null;
 
-        $definition = $this->definitionSource->getDefinition($id);
+        $definition = $this->definitionSource->get($id);
 
         if ($this->entriesBeingResolved->contains($id)) {
             throw new CircularDependencyException('Circular dependency detected while resolving entry ' . $id);
@@ -324,6 +324,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function has($id)
     {
-        return $this->definitionSource->hasDefinition($id);
+        return $this->definitionSource->has($id);
     }
 }
