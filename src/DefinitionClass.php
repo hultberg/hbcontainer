@@ -2,6 +2,8 @@
 
 namespace HbLib\Container;
 
+use Ds\Map;
+
 /**
  * An definition for a class that can have instances created.
  */
@@ -13,17 +15,17 @@ class DefinitionClass extends AbstractDefinition
     private $className = null;
 
     /**
-     * @var array
+     * @var Map
      */
-    private $parameters = [];
+    private $parameters;
 
     /**
      * @inheritDoc
      */
-    public function __construct($className = null, array $parameters = [])
+    public function __construct($className = null, Map $parameters = null)
     {
         $this->className = $className;
-        $this->parameters = $parameters;
+        $this->parameters = $parameters ?? new Map();
     }
 
     /**
@@ -34,17 +36,14 @@ class DefinitionClass extends AbstractDefinition
         return $this->className;
     }
 
-    /**
-     * @return array
-     */
-    public function getParameters(): array
+    public function getParameters(): Map
     {
         return $this->parameters;
     }
 
     public function parameter(string $key, $value)
     {
-        $this->parameters[$key] = $value;
+        $this->parameters->put($key, $value);
         return $this;
     }
 }

@@ -18,21 +18,21 @@ class CompiledContainerTest extends TestCase
     {
         // https://secure.php.net/manual/en/function.tmpfile.php#122678
         $tmpFile = stream_get_meta_data(tmpfile())['uri'];
-        
+
         register_shutdown_function(function() use ($tmpFile) {
             if (file_exists($tmpFile)) {
                 unlink($tmpFile);
             }
         });
-        
+
         return $tmpFile;
     }
-    
+
     private function getUniqueClassName(): string
     {
         return uniqid('CompiledContainer');
     }
-    
+
     public function testCompileResolve()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -41,11 +41,11 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         self::assertInstanceOf(Class2::class, $container->get(Class2::class));
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
     }
-    
+
     public function testCompileFactoryWithInterfaceArgument()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -57,10 +57,10 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         self::assertInstanceOf(Class1::class, $container->get(Class2::class));
     }
-    
+
     public function testCompileOptionalArguments()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -69,13 +69,13 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         self::assertInstanceOf(Class200::class, $container->get(Class200::class));
         self::assertNull($container->get(Class200::class)->someString);
         self::assertSame('12', $container->get(Class200::class)->moreStrings);
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
     }
-    
+
     public function testCompileFactory()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -91,15 +91,15 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         $container->get(Class1::class);
-    
+
         self::assertInstanceOf(Class2::class, $container->get(Class2::class));
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
         self::assertInstanceOf(Class10::class, $container->get(Class10::class));
         self::assertSame('string', $container->get(Class10::class)->name);
     }
-    
+
     public function testCompileValue()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -114,9 +114,9 @@ class CompiledContainerTest extends TestCase
             'key9' => reference('key2'),
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
-        
+
         $container = $containerBuilder->build();
-        
+
         self::assertSame('value1', $container->get('key1'));
         self::assertSame('value1', $container->get('key8'));
         self::assertInternalType('array', $container->get('key2'));
@@ -129,7 +129,7 @@ class CompiledContainerTest extends TestCase
         self::assertInternalType('array', $container->get('key9'));
         self::assertArraySubset(['array1', 'array2'], $container->get('key9'));
     }
-    
+
     public function testCompileFailParameter()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -138,12 +138,12 @@ class CompiledContainerTest extends TestCase
             }),
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
-        
+
         $this->expectException(UnresolvedContainerException::class);
         $this->expectExceptionMessage('Unable to resolve parameter name on entity');
         $container = $containerBuilder->build();
     }
-    
+
     public function testCompileFactoryChangedInRuntime()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -153,14 +153,14 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         $container->set(Class1::class, resolve(Class1::class));
-        
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Definition ' . Class1::class . ' is not a factory');
         $container->get(Class1::class);
     }
-    
+
     public function testCompileReference()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -169,11 +169,11 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-    
+
         self::assertInstanceOf(Class1::class, $container->get(Interface1::class));
         self::assertInstanceOf(Class1::class, $container->get(Class1::class));
     }
-    
+
     public function testCompileNotDefinitionClass()
     {
         $source = new DefinitionSource([
@@ -183,11 +183,11 @@ class CompiledContainerTest extends TestCase
         $containerBuilder = new ContainerBuilder($source);
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-    
+
         self::assertInstanceOf(Class1::class, $container->get(Interface1::class));
         self::assertInstanceOf(Class2::class, $container->get(Class2::class));
     }
-    
+
     public function testCompileNonDefinitions()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -203,7 +203,7 @@ class CompiledContainerTest extends TestCase
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-    
+
         self::assertSame('lol', $container->get('hei'));
         self::assertSame('null', $container->get('heisann'));
         self::assertFalse($container->get('lol2'));
@@ -212,20 +212,20 @@ class CompiledContainerTest extends TestCase
         self::assertSame(1, $container->get('qs3'));
         self::assertSame('', $container->get('qs4'));
     }
-    
+
     public function testResolveOptionalInterface()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
             SessionClass::class => resolve(),
         ]));
-        
+
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         self::assertInstanceOf(SessionClass::class, $container->get(SessionClass::class));
         self::assertNull($container->get(SessionClass::class)->bag);
     }
-    
+
     public function testResolveInvoker()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
@@ -233,10 +233,10 @@ class CompiledContainerTest extends TestCase
                 return new SessionClass();
             }),
         ]));
-        
+
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();
-        
+
         self::assertInstanceOf(SessionClass::class, $container->get(SessionClass::class));
         self::assertNull($container->get(SessionClass::class)->bag);
     }
@@ -250,14 +250,14 @@ class Class10 {
 }
 
 class Class100 implements Interface1 {
-    
+
 }
 
 class Class200 {
     public $class;
     public $someString;
     public $moreStrings;
-    
+
     function __construct(Class1 $class1, $someString = null, $moreStrings = '12') {
         $this->class = $class1;
         $this->someString = $someString;
@@ -269,7 +269,7 @@ interface InterfaceSessionBagCompiled {}
 
 class SessionClass {
     public $bag;
-    
+
     function __construct(InterfaceSessionBagCompiled $bag = null) {
         $this->bag = $bag;
     }

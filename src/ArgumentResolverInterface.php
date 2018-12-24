@@ -2,17 +2,20 @@
 
 namespace HbLib\Container;
 
+use Ds\Collection;
+use Ds\Map;
+
 interface ArgumentResolverInterface
 {
     /**
      * Resolve parameters of a reflection function.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param array $arguments
+     * @param Map|null $arguments
      *
-     * @return Argument[]
+     * @return Collection
      *
      * @throws UnresolvedContainerException
      */
-    public function resolve(\ReflectionFunctionAbstract $function, array $arguments = array()): array;
+    public function resolve(\ReflectionFunctionAbstract $function, Map $arguments = null): Collection;
 }
