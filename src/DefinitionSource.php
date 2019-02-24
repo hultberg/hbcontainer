@@ -14,8 +14,15 @@ class DefinitionSource implements \Countable, \IteratorAggregate
      */
     private $definitions;
 
-    public function __construct(Map $definitions = null)
+    /**
+     * @param array|Map|null $definitions
+     */
+    public function __construct($definitions = null)
     {
+        if (is_array($definitions)) {
+            $definitions = new Map($definitions);
+        }
+
         $this->definitions = $definitions ?? new Map();
     }
 
