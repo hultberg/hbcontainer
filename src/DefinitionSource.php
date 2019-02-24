@@ -68,7 +68,7 @@ class DefinitionSource implements \Countable, \IteratorAggregate
 
     public function getIterator()
     {
-        return $this->definitions->getIterator();
+        yield from $this->definitions;
     }
 
     /**
@@ -106,8 +106,8 @@ class DefinitionSource implements \Countable, \IteratorAggregate
     /**
      * @deprecated Deprecated in favour of set()
      * @see set()
-     * @param $id
-     * @param $value
+     * @param mixed $id
+     * @param mixed $value
      */
     public function setDefinition($id, $value): void
     {
