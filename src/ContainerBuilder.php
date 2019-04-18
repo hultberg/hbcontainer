@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
-use Ds\Map;
-
 class ContainerBuilder
 {
     /**
@@ -29,7 +27,7 @@ class ContainerBuilder
     private $compileFilePath;
 
     /**
-     * @param Map|DefinitionSource $definitions
+     * @param array|DefinitionSource $definitions
      */
     public function __construct($definitions)
     {

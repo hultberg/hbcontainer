@@ -3,17 +3,16 @@
     "description": "Lightweight container",
     "type": "library",
     "require": {
-		"php": "^7.1",
-        "psr/container": "^1.0",
-        "php-ds/php-ds": "^1.2"
+        "php": "^7.3",
+        "psr/container": "^1.0"
     },
-	"autoload": {
-		"psr-4": {
-			"HbLib\\Container\\": "src/",
-			"HbLib\\Container\\Tests\\": "tests/"
-		},
+    "autoload": {
+        "psr-4": {
+            "HbLib\\Container\\": "src/",
+            "HbLib\\Container\\Tests\\": "tests/"
+        },
         "files": ["src/functions.php"]
-	},
+    },
     "license": "MIT",
     "authors": [
         {
@@ -21,13 +20,13 @@
             "email": "hultberg@mittnett.net"
         }
     ],
-	"config": {
-		"platform": {
-			"php": "7.1.13"
-		}
-	},
+    "config": {
+        "platform": {
+            "php": "7.3.4"
+        }
+    },
     "require-dev": {
-        "phpunit/phpunit": "^7.1",
+        "phpunit/phpunit": "^8.0",
         "phpstan/phpstan-shim": "^0.10.2"
     }
 }

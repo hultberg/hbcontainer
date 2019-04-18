@@ -10,10 +10,9 @@ class ArgumentResolver implements ArgumentResolverInterface
     /**
      * {@inheritdoc}
      */
-    public function resolve(\ReflectionFunctionAbstract $function, Map $arguments = null): Collection
+    public function resolve(\ReflectionFunctionAbstract $function, array $arguments = []): array
     {
-        if ($arguments === null) $arguments = new Map();
-        $resolvedArguments = new Map();
+        $resolvedArguments = [];
 
         foreach ($function->getParameters() as $parameter) {
             // Identify if the type is a class we can attempt to build.
@@ -38,10 +37,10 @@ class ArgumentResolver implements ArgumentResolverInterface
                 $argumentFactory->setDefaultValue($parameter->getDefaultValue());
             }
 
-            if ($arguments->hasKey($parameterName)) {
+            if (isset($arguments[$parameterName])) {
                 $argumentFactory->setIsResolved(true);
-                $argumentFactory->setValue($arguments->get($parameterName));
-                $resolvedArguments->put($parameterName, $argumentFactory->make());
+                $argumentFactory->setValue($arguments[$parameterName]);
+                $resolvedArguments[$parameterName] = $argumentFactory->make();
                 continue;
             }
 
@@ -52,7 +51,7 @@ class ArgumentResolver implements ArgumentResolverInterface
                 $argumentFactory->setTypeHintClassName($typeName);
 
                 if (\HbLib\Container\classNameExists($typeName)) {
-                    $resolvedArguments->put($parameterName, $argumentFactory->make());
+                    $resolvedArguments[$parameterName] = $argumentFactory->make();
                     continue;
                 }
             }
@@ -60,7 +59,7 @@ class ArgumentResolver implements ArgumentResolverInterface
             // Case #2: Argument is optional and has a default value
             if ($isOptional && $isDefaultValueAvailable) {
                 // Some builtin with a default value.
-                $resolvedArguments->put($parameterName, $argumentFactory->make());
+                $resolvedArguments[$parameterName] = $argumentFactory->make();
                 continue;
             }
 

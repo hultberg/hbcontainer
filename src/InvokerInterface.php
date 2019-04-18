@@ -10,7 +10,7 @@ interface InvokerInterface
      * Call the given function using the given parameters.
      *
      * @param callable|array|string|\Closure $callable Function to call.
-     * @param null|Map|array $parameters Parameters to use.
+     * @param array $parameters Parameters to use.
      *
      * @return mixed Result of the function.
      *
@@ -18,5 +18,5 @@ interface InvokerInterface
      * @throws UnresolvedContainerException
      * @throws \ReflectionException
      */
-    public function call($callable, $parameters = null);
+    public function call($callable, array $parameters = []);
 }

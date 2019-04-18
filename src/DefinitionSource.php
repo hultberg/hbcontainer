@@ -4,26 +4,22 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
-use Ds\Map;
-use OutOfBoundsException;
+use function array_key_exists;
+use function count;
 
 class DefinitionSource implements \Countable, \IteratorAggregate
 {
     /**
-     * @var Map
+     * @var array
      */
     private $definitions;
 
     /**
-     * @param array|Map|null $definitions
+     * @param array $definitions
      */
-    public function __construct($definitions = null)
+    public function __construct(array $definitions = [])
     {
-        if (is_array($definitions)) {
-            $definitions = new Map($definitions);
-        }
-
-        $this->definitions = $definitions ?? new Map();
+        $this->definitions = $definitions;
     }
 
     /**
@@ -32,7 +28,7 @@ class DefinitionSource implements \Countable, \IteratorAggregate
      */
     public function set($id, $value): void
     {
-        $this->definitions->put($id, $value);
+        $this->definitions[$id] = $value;
     }
 
     /**
@@ -41,7 +37,7 @@ class DefinitionSource implements \Countable, \IteratorAggregate
      */
     public function get($id)
     {
-        return $this->definitions->get($id, null);
+        return $this->definitions[$id] ?? null;
     }
 
     /**
@@ -50,67 +46,24 @@ class DefinitionSource implements \Countable, \IteratorAggregate
      */
     public function has($id): bool
     {
-        return $this->definitions->hasKey($id);
+        return array_key_exists($id, $this->definitions);
     }
 
     /**
-     * @return Map
+     * @return array
      */
-    public function all(): Map
+    public function all(): array
     {
         return $this->definitions;
     }
 
     public function count()
     {
-        return $this->definitions->count();
+        return count($this->definitions);
     }
 
     public function getIterator()
     {
         yield from $this->definitions;
-    }
-
-    /**
-     * @deprecated
-     * @see all()
-     * @return Map
-     */
-    public function getDefinitions(): Map
-    {
-        return $this->definitions;
-    }
-
-    /**
-     * @deprecated
-     * @see has()
-     * @param mixed $id
-     * @return bool
-     */
-    public function hasDefinition($id): bool
-    {
-        return $this->definitions->hasKey($id);
-    }
-
-    /**
-     * @deprecated
-     * @see get()
-     * @param mixed $id
-     * @return mixed
-     */
-    public function getDefinition($id)
-    {
-        return $this->definitions->get($id, null);
-    }
-
-    /**
-     * @deprecated Deprecated in favour of set()
-     * @see set()
-     * @param mixed $id
-     * @param mixed $value
-     */
-    public function setDefinition($id, $value): void
-    {
-        $this->definitions->put($id, $value);
     }
 }

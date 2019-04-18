@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
-use function array_reduce;
-use Ds\Map;
-use Ds\Queue;
-use Ds\Set;
-use Ds\Stack;
+use function count;
 use function is_iterable;
 
 class Compiler
@@ -19,7 +15,7 @@ class Compiler
     private $definitions;
 
     /**
-     * @var Queue
+     * @var array
      */
     private $definitionsToCompile;
 
@@ -34,12 +30,12 @@ class Compiler
     private $compiledParentClassName;
 
     /**
-     * @var Set
+     * @var array
      */
     private $methods;
 
     /**
-     * @var Map
+     * @var array
      */
     private $entryToMethods;
 
@@ -58,8 +54,8 @@ class Compiler
         $this->fileInfo = new \SplFileInfo($filePath);
         $this->compiledClassName = $compiledClassName;
         $this->compiledParentClassName = '\\' . CompiledContainer::class;
-        $this->methods = new Set();
-        $this->entryToMethods = new Map();
+        $this->methods = [];
+        $this->entryToMethods = [];
     }
 
     public function compile(DefinitionSource $definitions)
@@ -67,9 +63,11 @@ class Compiler
         // Compile the container if we have not already done it.
         if (!$this->fileInfo->isFile()) {
             $this->definitions = $definitions;
-            $this->definitionsToCompile = new Queue($definitions->all()->map(function(string $id, $value): CompiledEntry {
-                return new CompiledEntry($id, $value);
-            }));
+            $this->definitionsToCompile = [];
+
+            foreach ($this->definitions as $id => $value) {
+                $this->definitionsToCompile[] = new CompiledEntry($id, $value);
+            }
 
             foreach ($this->definitionsToCompile as $entry) {
                 /** @var CompiledEntry $entry */
@@ -109,8 +107,8 @@ class Compiler
             // TODO: unsilence the chmod and report the error.
             @chmod($this->fileInfo->getPathname(), 0666 & ~umask());
 
-            $this->entryToMethods->clear();
-            $this->methods->clear();
+            $this->entryToMethods = [];
+            $this->methods = [];
             unset($this->definitions);
         }
 
@@ -120,12 +118,12 @@ class Compiler
     private function compileDefinition($entryName, AbstractDefinition $definition)
     {
         // Already compiled the entry?
-        if ($this->entryToMethods->hasKey($entryName)) {
-            return $this->entryToMethods->get($entryName);
+        if (isset($this->entryToMethods[$entryName])) {
+            return $this->entryToMethods[$entryName];
         }
 
         $methodName = str_replace('.', '', uniqid('get', true));
-        $this->entryToMethods->put($entryName, $methodName);
+        $this->entryToMethods[$entryName] = $methodName;
 
         switch (true) {
             case $definition instanceof DefinitionReference:
@@ -133,8 +131,8 @@ class Compiler
                 $entryName = $definition->getEntryName();
 
                 // Ensure we compile this definition too.
-                if (!$this->entryToMethods->hasKey($entryName)) {
-                    $this->definitionsToCompile->push(new CompiledEntry($entryName));
+                if (!isset($this->entryToMethods[$entryName])) {
+                    $this->definitionsToCompile[] = new CompiledEntry($entryName);
                 }
 
                 $code = 'return $this->get(' . $this->compileValue($entryName) . ');';
@@ -145,7 +143,7 @@ class Compiler
                 $resolvedParameters = $this->resolveParameters(new \ReflectionFunction($definition->getClosure()), $definition->getParameters());
 
                 $parametersString = '';
-                if (!$resolvedParameters->isEmpty()) {
+                if (count($resolvedParameters) > 0) {
                     $parametersString = ', ' . $this->compileValue($resolvedParameters);
                 }
 
@@ -181,24 +179,24 @@ class Compiler
                 break;
         }
 
-        $this->methods->add(new CompiledMethod($methodName, $code));
+        $this->methods[] = new CompiledMethod($methodName, $code);
         return $methodName;
     }
 
-    private function resolveParameters(\ReflectionFunctionAbstract $function, Map $extraParameters = null)
+    private function resolveParameters(\ReflectionFunctionAbstract $function, array $extraParameters = []): array
     {
         if ($this->argumentResolver === null) {
             $this->argumentResolver = new ArgumentResolver();
         }
 
         $parameters = $this->argumentResolver->resolve($function, $extraParameters);
-        $resolvedParameters = new Map();
+        $resolvedParameters = [];
 
         foreach ($parameters as $parameter) {
             /** @var Argument $parameter */
 
             if ($parameter->isResolved()) {
-                $resolvedParameters->put($parameter->getName(), $parameter->getValue());
+                $resolvedParameters[$parameter->getName()] = $parameter->getValue();
                 continue;
             }
 
@@ -208,20 +206,20 @@ class Compiler
                 $class = new \ReflectionClass($typeHint);
 
                 if ($class->isInstantiable() || $this->definitions->has($typeHint)) {
-                    $resolvedParameters->put($parameter->getName(), new DefinitionReference($typeHint));
+                    $resolvedParameters[$parameter->getName()] = new DefinitionReference($typeHint);
                     continue;
                 }
             }
 
             // Case #3: Optional?
             if ($parameter->isOptional()) {
-                $resolvedParameters->put($parameter->getName(), $parameter->getDefaultValue());
+                $resolvedParameters[$parameter->getName()] = $parameter->getDefaultValue();
                 continue;
             }
 
             // Something is wrong... might be an interface that has no definition entry.
             // It might be set in runtime so just let the container compile it.
-            $resolvedParameters->put($parameter->getName(), new DefinitionReference($typeHint));
+            $resolvedParameters[$parameter->getName()] = new DefinitionReference($typeHint);
         }
 
         return $resolvedParameters;

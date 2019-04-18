@@ -11,9 +11,9 @@ interface FactoryInterface
      *
      * @param string $name
      *
-     *  @param Map|null|array  $parameters
+     *  @param array  $parameters
      *
      * @return mixed
      */
-    public function make(string $name, $parameters = []);
+    public function make(string $name, array $parameters = []);
 }
