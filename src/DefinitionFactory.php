@@ -3,8 +3,6 @@
 namespace HbLib\Container;
 
 use Closure;
-use Ds\Map;
-use mysql_xdevapi\Collection;
 
 class DefinitionFactory extends AbstractDefinition
 {
@@ -14,14 +12,14 @@ class DefinitionFactory extends AbstractDefinition
     private $closure;
 
     /**
-     * @var Map
+     * @var array
      */
     private $parameters;
 
     public function __construct(Closure $closure)
     {
         $this->closure = $closure;
-        $this->parameters = new Map();
+        $this->parameters = [];
     }
 
     public function getClosure(): Closure
@@ -29,14 +27,14 @@ class DefinitionFactory extends AbstractDefinition
         return $this->closure;
     }
 
-    public function getParameters(): Map
+    public function getParameters(): array
     {
         return $this->parameters;
     }
 
     public function parameter(string $name, $value)
     {
-        $this->parameters->put($name, $value);
+        $this->parameters[$name] = $value;
 
         return $this;
     }

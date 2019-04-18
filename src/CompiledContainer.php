@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
-use Ds\Map;
-
 abstract class CompiledContainer extends Container
 {
     /**
-     * @var Map
+     * @var array
      */
     protected $methodMapping;
 
@@ -32,15 +30,15 @@ abstract class CompiledContainer extends Container
     public function get($id)
     {
         // Have we resolved the ID before?
-        if ($this->singletons->hasKey($id)) {
-            return $this->singletons->get($id);
+        if (isset($this->singletons[$id])) {
+            return $this->singletons[$id];
         }
 
-        $method = $this->methodMapping->get($id, null);
+        $method = $this->methodMapping[$id] ?? null;
 
         if ($method !== null) {
             $value = $this->$method();
-            $this->singletons->put($id, $value);
+            $this->singletons[$id] = $value;
 
             return $value;
         }
@@ -50,7 +48,7 @@ abstract class CompiledContainer extends Container
 
     protected function resolveFactory($entryName, array $parameters = [])
     {
-        $definition = $this->definitionSource->getDefinition($entryName);
+        $definition = $this->definitionSource->get($entryName);
 
         if ($definition instanceof DefinitionFactory) {
             return $this->call($definition->getClosure(), $parameters);

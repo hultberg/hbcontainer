@@ -11,7 +11,7 @@ final class <?php echo ltrim($this->compiledClassName, '\\'); ?> extends <?php e
     protected function _initialize(): void {
         parent::_initialize();
 
-        $this->methodMapping = new \Ds\Map(<?php var_export($this->entryToMethods->toArray()); ?>);
+        $this->methodMapping = <?php var_export($this->entryToMethods); ?>;
     }
 
 <?php foreach ($this->methods as $method): ?>
