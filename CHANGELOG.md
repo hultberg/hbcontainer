@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.0.0
+
+* Rewrite to use native php arrays.
+
 ## v3.0.1
 
 * Fix DefinitionSource requirement to be Map, not array.
