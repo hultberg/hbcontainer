@@ -119,15 +119,17 @@ class CompiledContainerTest extends TestCase
 
         self::assertSame('value1', $container->get('key1'));
         self::assertSame('value1', $container->get('key8'));
-        self::assertInternalType('array', $container->get('key2'));
-        self::assertArraySubset(['array1', 'array2'], $container->get('key2'));
+        self::assertIsArray($container->get('key2'));
+        self::assertSame('array1', $container->get('key2')[0]);
+        self::assertSame('array2', $container->get('key2')[1]);
         self::assertTrue($container->get('key3'));
         self::assertFalse($container->get('key4'));
         self::assertSame('1', $container->get('key5'));
         self::assertSame(2, $container->get('key6'));
         self::assertSame(2.0, $container->get('key7'));
-        self::assertInternalType('array', $container->get('key9'));
-        self::assertArraySubset(['array1', 'array2'], $container->get('key9'));
+        self::assertIsArray($container->get('key9'));
+        self::assertSame('array1', $container->get('key9')[0]);
+        self::assertSame('array2', $container->get('key9')[1]);
     }
 
     public function testCompileFailParameter()

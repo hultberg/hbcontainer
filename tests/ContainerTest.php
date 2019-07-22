@@ -24,33 +24,33 @@ class ContainerTest extends TestCase
         ]));
         self::assertEquals('value', $container->get('key'));
     }
-    
+
     public function testReferenceToNonClass()
     {
         $container = new Container(new DefinitionSource([
             'key' => 'value',
             'someKey' => reference('key'),
         ]));
-        
+
         self::assertEquals('value', $container->get('someKey'));
     }
-    
+
     public function testValue()
     {
         $container = new Container(new DefinitionSource([
             'someKey' => value('key'),
         ]));
-        
+
         self::assertEquals('key', $container->get('someKey'));
     }
-    
+
     public function testValueAnotherDefinition()
     {
         $container = new Container(new DefinitionSource([
             'key' => 'value',
             'someKey' => value(reference('key')),
         ]));
-        
+
         self::assertEquals('value', $container->get('someKey'));
     }
 
@@ -61,7 +61,7 @@ class ContainerTest extends TestCase
         ]));
         self::assertEquals(12, $container->get('key'));
     }
-    
+
     public function testGetFactoryParameter()
     {
         $container = new Container(new DefinitionSource([
@@ -77,7 +77,7 @@ class ContainerTest extends TestCase
         ]));
         self::assertEquals(12, $container->get('key'));
     }
-    
+
     public function testGetNonDefinitions()
     {
         $container = new Container(new DefinitionSource([
@@ -91,7 +91,7 @@ class ContainerTest extends TestCase
             'qs3' => 1,
             'qs4' => '',
         ]));
-        
+
         self::assertSame('lol', $container->get('hei'));
         self::assertSame('null', $container->get('heisann'));
         self::assertFalse($container->get('lol2'));
@@ -108,29 +108,29 @@ class ContainerTest extends TestCase
         ]));
         self::assertInstanceOf(Class1::class, $container->get('key'));
     }
-    
+
     public function testCatchesCircular()
     {
         // $this->expectException(ContainerException::class);
         // $this->expectExceptionMessage('Circular dependency detected while resolving entry ' . Circular1::class);
-        // 
+        //
         $container = new Container(new DefinitionSource([
             Circular1::class => resolve(),
             Circular2::class => resolve(),
         ]));
-        
+
         try {
             self::assertNotInstanceOf(Circular1::class, $container->get(Circular1::class));
         } catch (ContainerException $e) {
             self::assertTrue(true);
-            
+
             do {
                 if ($e instanceof CircularDependencyException) {
                     self::assertTrue(true);
                     self::assertSame('Circular dependency detected while resolving entry HbLib\Container\Tests\Circular1', $e->getMessage());
                     break;
                 }
-                
+
                 $e = $e->getPrevious();
             } while ($e !== null);
         }
@@ -139,7 +139,7 @@ class ContainerTest extends TestCase
     public function testDefinitionFactoryCallableArray()
     {
         $class1 = new ClassWithMethod();
-        
+
         $container = new Container(new DefinitionSource([
             'key' => factory([$class1, 'callMe']),
         ]));
@@ -214,11 +214,11 @@ class ContainerTest extends TestCase
         ]));
 
         self::assertInstanceOf(\stdClass::class, $container->get('key'));
-        self::assertInternalType('bool', $container->get('key')->test);
+        self::assertIsBool($container->get('key')->test);
         self::assertTrue($container->get('key')->test);
 
         $container->get('key')->test = 5;
-        self::assertInternalType('int', $container->get('key')->test);
+        self::assertIsInt($container->get('key')->test);
         self::assertEquals(5, $container->get('key')->test);
     }
 
@@ -310,11 +310,11 @@ class ContainerTest extends TestCase
         ]));
 
         self::assertInstanceOf(\stdClass::class, $container->make('key'));
-        self::assertInternalType('bool', $container->make('key')->test);
+        self::assertIsBool($container->make('key')->test);
         self::assertTrue($container->make('key')->test);
 
         $container->make('key')->test = 5;
-        self::assertInternalType('bool', $container->make('key')->test);
+        self::assertIsBool($container->make('key')->test);
         self::assertTrue($container->make('key')->test);
     }
 
@@ -391,7 +391,7 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(Class1::class, $class2->class1);
         self::assertEquals('otherValue', $class2->class1->parameter);
     }
-    
+
     public function testArgumentBuiltin()
     {
         $container = new Container(new DefinitionSource([
@@ -399,7 +399,7 @@ class ContainerTest extends TestCase
                 return new \stdClass;
             }),
         ]));
-        
+
         $this->expectException(UnresolvedContainerException::class);
         $this->expectExceptionMessage('Unable to resolve parameter name on entity');
         $container->get('key');
@@ -426,25 +426,25 @@ class ContainerTest extends TestCase
 
         self::assertEquals('hei', $container->get('hei2'));
     }
-    
+
     public function testEnsureSingletonCache()
     {
         $container = new Container();
         $needsNeedsRand = $container->get(NeedsNeedsWithRandom::class);
         $needsRand = $container->get(NeedsWithRandom::class);
         $rand = $container->get(WithRandom::class);
-        
+
         self::assertSame($rand->int, $needsNeedsRand->rand->rand->int);
         self::assertSame($rand->int, $needsRand->rand->int);
         self::assertSame($needsRand->rand->int, $needsNeedsRand->rand->rand->int);
     }
-    
+
     public function testResolveOptionalInterface()
     {
         $container = new Container(new DefinitionSource([
             Session::class => resolve(),
         ]));
-        
+
         self::assertInstanceOf(Session::class, $container->get(Session::class));
         self::assertNull($container->get(Session::class)->bag);
     }
@@ -464,7 +464,7 @@ class Circular2 {
 
 class WithRandom {
     public $int;
-    
+
     function __construct() {
         $this->int = microtime(true) + random_int(100, 50000);
     }
@@ -472,7 +472,7 @@ class WithRandom {
 
 class NeedsWithRandom {
     public $rand;
-    
+
     function __construct(WithRandom $random) {
         $this->rand = $random;
     }
@@ -480,7 +480,7 @@ class NeedsWithRandom {
 
 class NeedsNeedsWithRandom {
     public $rand;
-    
+
     function __construct(NeedsWithRandom $random) {
         $this->rand = $random;
     }
@@ -490,7 +490,7 @@ interface InterfaceSessionBag {}
 
 class Session {
     public $bag;
-    
+
     function __construct(InterfaceSessionBag $bag = null) {
         $this->bag = $bag;
     }
