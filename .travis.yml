@@ -1,9 +1,7 @@
 language: php
 
 php:
-    - '7.2'
-    - '7.3'
-    - nightly
+    - '7.4'
 
 install: composer install --no-progress
 script:
