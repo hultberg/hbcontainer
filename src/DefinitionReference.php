@@ -14,6 +14,8 @@ class DefinitionReference extends AbstractDefinition
      */
     public function __construct($entryName)
     {
+        parent::__construct();
+        
         $this->entryName = $entryName;
     }
 

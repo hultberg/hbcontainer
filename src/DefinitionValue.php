@@ -11,6 +11,8 @@ class DefinitionValue extends AbstractDefinition
 
     public function __construct($value)
     {
+        parent::__construct();
+        
         $this->value = $value;
     }
 

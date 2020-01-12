@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
+use function is_object;
+
 abstract class CompiledContainer extends Container
 {
     /**
      * @var array
      */
-    protected $methodMapping;
+    protected array $methodMapping;
 
     public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
     {
@@ -30,17 +32,15 @@ abstract class CompiledContainer extends Container
     public function get($id)
     {
         // Have we resolved the ID before?
-        if (isset($this->singletons[$id])) {
-            return $this->singletons[$id];
-        }
+        if (isset($this->singletons[$id]) === false) {
+            $method = $this->methodMapping[$id] ?? null;
 
-        $method = $this->methodMapping[$id] ?? null;
+            if ($method !== null) {
+                $value = $this->$method();
+                $this->setSingleton($id, $value);
 
-        if ($method !== null) {
-            $value = $this->$method();
-            $this->singletons[$id] = $value;
-
-            return $value;
+                return $value;
+            }
         }
 
         return parent::get($id);

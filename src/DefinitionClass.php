@@ -22,6 +22,8 @@ class DefinitionClass extends AbstractDefinition
      */
     public function __construct($className = null, array $parameters = [])
     {
+        parent::__construct();
+        
         $this->className = $className;
         $this->parameters = $parameters;
     }

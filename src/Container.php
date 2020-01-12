@@ -15,24 +15,24 @@ use Psr\Container\NotFoundExceptionInterface;
 class Container implements ContainerInterface, FactoryInterface, InvokerInterface
 {
     /**
-     * @var array
+     * @var ObjectReference[]|mixed[]
      */
-    protected $singletons;
+    protected array $singletons;
 
     /**
      * @var DefinitionSource
      */
-    protected $definitionSource;
+    protected DefinitionSource $definitionSource;
 
     /**
      * @var array
      */
-    protected $entriesBeingResolved;
+    protected array $entriesBeingResolved;
 
     /**
      * @var ArgumentResolverInterface
      */
-    private $argumentResolver;
+    private ArgumentResolverInterface $argumentResolver;
 
     public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
     {
@@ -51,7 +51,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         $this->definitionSource->set(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
 
         // Register the container itself.
-        $this->singletons[self::class] = $this;
+        $this->singletons[self::class] = new SingletonReference($this);
     }
 
     /**
@@ -68,12 +68,27 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     public function get($id)
     {
-        if (!isset($this->singletons[$id])) {
-            // Attempt to build the $id class
-            $this->singletons[$id] = $this->make($id);
+        if (isset($this->singletons[$id]) === true) {
+            $singletonValue = $this->singletons[$id];
+
+            if ($singletonValue instanceof ObjectReference) {
+                $singletonValue = $singletonValue->get();
+
+                if ($singletonValue !== null) {
+                    return $singletonValue;
+                }
+
+                unset($this->singletons[$id]);
+            } else {
+                return $singletonValue;
+            }
         }
 
-        return $this->singletons[$id];
+        // Attempt to build the $id class
+        $instance = $this->make($id); // this is to keep a strong reference during the method lifetime.
+        $this->setSingleton($id, $instance);
+
+        return $instance;
     }
 
     /**
@@ -133,7 +148,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         if ($value instanceof AbstractDefinition) {
             $this->definitionSource->set($id, $value);
         } else {
-            $this->singletons[$id] = $value;
+            $this->setSingleton($id, $value);
         }
     }
 
@@ -177,6 +192,23 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         } finally {
             unset($this->entriesBeingResolved[$id]);
         }
+    }
+    
+    protected function setSingleton(string $id, $value)
+    {
+        if (is_object($value) === true) {
+            $definition = $this->definitionSource->get($id);
+            $reference = new WeakReference($value);
+            
+            if ($definition !== null && $definition->isSingletonLifetime() === true) {
+                $reference = new SingletonReference($value);
+            }
+            
+            $this->singletons[$id] = $reference;
+            return;
+        }
+        
+        $this->singletons[$id] = $value;
     }
 
     private function resolveValue($value, $referencedEntryName)

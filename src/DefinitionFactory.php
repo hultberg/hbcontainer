@@ -18,6 +18,8 @@ class DefinitionFactory extends AbstractDefinition
 
     public function __construct(Closure $closure)
     {
+        parent::__construct();
+        
         $this->closure = $closure;
         $this->parameters = [];
     }

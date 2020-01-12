@@ -210,7 +210,7 @@ class ContainerTest extends TestCase
                 $class = new \stdClass;
                 $class->test = true;
                 return $class;
-            }),
+            })->asSingleton(),
         ]));
 
         self::assertInstanceOf(\stdClass::class, $container->get('key'));
