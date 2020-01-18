@@ -5,5 +5,5 @@ php:
 
 install: composer install --no-progress
 script:
-  - vendor/bin/phpstan analyse --no-progress -l 7 -c ./phpstan.neon src tests
+  - vendor/bin/phpstan analyse --no-progress -l 7 -c ./phpstan.neon src
   - php -d "zend_extension=xdebug" vendor/bin/phpunit --coverage-text
