@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
-use function is_object;
-
 abstract class CompiledContainer extends Container
 {
     /**
@@ -17,7 +15,6 @@ abstract class CompiledContainer extends Container
     {
         parent::__construct($definitionSource, $argumentResolver);
 
-//        $this->methodMapping = new Map();
         $this->_initialize();
     }
 
