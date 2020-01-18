@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);        
+declare(strict_types=1);
 
 namespace HbLib\Container;
 
@@ -10,39 +10,39 @@ class Argument
      * @var string
      */
     private $name;
-    
+
     /**
      * @var string|null
      */
     private $typeHintClassName;
-    
+
     /**
      * @var mixed
      */
     private $value;
-    
+
     /**
      * If this argument was provided in ArgumentResolverInterface::resolve second argument.
-     * 
+     *
      * @var bool
      */
     private $isResolved;
-    
+
     /**
      * @var bool
      */
     private $isOptional;
-    
+
     /**
      * @var mixed
      */
     private $defaultValue;
-    
+
     /**
      * @var string|null
      */
     private $declaringClassName;
-    
+
     /**
      * @param string $name
      * @param string|null $typeHintClassName
@@ -62,7 +62,7 @@ class Argument
         $this->isResolved = false;
         $this->declaringClassName = null;
     }
-    
+
     /**
      * @return string|null
      */
@@ -70,7 +70,7 @@ class Argument
     {
         return $this->declaringClassName;
     }
-    
+
     /**
      * @param string|null $declaringClassName
      */
@@ -78,7 +78,7 @@ class Argument
     {
         $this->declaringClassName = $declaringClassName;
     }
-    
+
     /**
      * @return mixed
      */
@@ -87,18 +87,12 @@ class Argument
         return $this->value;
     }
 
-    /**
-     * @return bool
-     */
     public function isResolved(): bool
     {
         return $this->isResolved;
     }
-    
-    /**
-     * @param bool $isResolved
-     */
-    public function setIsResolved(bool $isResolved)
+
+    public function setIsResolved(bool $isResolved): void
     {
         $this->isResolved = $isResolved;
     }
@@ -106,11 +100,11 @@ class Argument
     /**
      * @param mixed $value
      */
-    public function setValue($value)
+    public function setValue($value): void
     {
         $this->value = $value;
     }
-    
+
     /**
      * @return string
      */

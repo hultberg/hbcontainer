@@ -51,7 +51,7 @@ class ContainerBuilder
         $this->containerClass = $className ?? '\CompiledContainer';
     }
 
-    public function build()
+    public function build(): CompiledContainer
     {
         // Put the class into a variable so we can create it dynamically later.
         // (php does not support doing `new $this->containerClass`)

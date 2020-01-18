@@ -9,17 +9,17 @@ class DefinitionFactory extends AbstractDefinition
     /**
      * @var Closure
      */
-    private $closure;
+    private Closure $closure;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    private $parameters;
+    private array $parameters;
 
     public function __construct(Closure $closure)
     {
         parent::__construct();
-        
+
         $this->closure = $closure;
         $this->parameters = [];
     }
@@ -34,6 +34,11 @@ class DefinitionFactory extends AbstractDefinition
         return $this->parameters;
     }
 
+    /**
+     * @param string $name
+     * @param mixed $value
+     * @return $this
+     */
     public function parameter(string $name, $value)
     {
         $this->parameters[$name] = $value;

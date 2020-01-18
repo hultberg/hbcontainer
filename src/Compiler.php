@@ -58,7 +58,7 @@ class Compiler
         $this->entryToMethods = [];
     }
 
-    public function compile(DefinitionSource $definitions)
+    public function compile(DefinitionSource $definitions): string
     {
         // Compile the container if we have not already done it.
         if (!$this->fileInfo->isFile()) {
@@ -115,7 +115,7 @@ class Compiler
         return $this->fileInfo->getPathname();
     }
 
-    private function compileDefinition($entryName, AbstractDefinition $definition)
+    private function compileDefinition(string $entryName, AbstractDefinition $definition): string
     {
         // Already compiled the entry?
         if (isset($this->entryToMethods[$entryName])) {
@@ -176,7 +176,6 @@ class Compiler
 
             default:
                 throw new \RuntimeException('Invalid definition');
-                break;
         }
 
         $this->methods[] = new CompiledMethod($methodName, $code);
@@ -225,7 +224,11 @@ class Compiler
         return $resolvedParameters;
     }
 
-    private function compileValue($value)
+    /**
+     * @param AbstractDefinition|iterable|mixed $value
+     * @return string
+     */
+    private function compileValue($value): string
     {
         if ($value instanceof AbstractDefinition) {
             $entryName = uniqid('SubEntry', true);

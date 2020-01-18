@@ -4,6 +4,7 @@ namespace HbLib\Container;
 
 use Ds\Collection;
 use Ds\Map;
+use ReflectionNamedType;
 
 class ArgumentResolver implements ArgumentResolverInterface
 {
@@ -46,7 +47,7 @@ class ArgumentResolver implements ArgumentResolverInterface
 
             // We must resolve this parameter.
             // Case #1: A class/interface/trait we can build
-            if ($type !== null && !$type->isBuiltin()) {
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
                 $typeName = $type->getName();
                 $argumentFactory->setTypeHintClassName($typeName);
 

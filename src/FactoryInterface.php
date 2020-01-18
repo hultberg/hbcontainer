@@ -10,8 +10,7 @@ interface FactoryInterface
      * Resolves an entry by its name. A fresh instance will always be returned, never a singleton.
      *
      * @param string $name
-     *
-     *  @param array  $parameters
+     * @param array<string, mixed>  $parameters
      *
      * @return mixed
      */

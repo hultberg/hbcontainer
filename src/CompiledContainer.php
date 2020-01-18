@@ -45,16 +45,4 @@ abstract class CompiledContainer extends Container
 
         return parent::get($id);
     }
-
-    protected function resolveFactory($entryName, array $parameters = [])
-    {
-        $definition = $this->definitionSource->get($entryName);
-
-        if ($definition instanceof DefinitionFactory) {
-            return $this->call($definition->getClosure(), $parameters);
-        }
-
-        // Unless someone changed a definition in runtime... this will happen.
-        throw new \RuntimeException('Definition ' . $entryName . ' is not a factory');
-    }
 }

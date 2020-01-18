@@ -9,8 +9,8 @@ interface InvokerInterface
     /**
      * Call the given function using the given parameters.
      *
-     * @param callable|array|string|\Closure $callable Function to call.
-     * @param array $parameters Parameters to use.
+     * @param callable|array<string>|string|\Closure $callable Function to call.
+     * @param array<string, mixed> $parameters Parameters to use.
      *
      * @return mixed Result of the function.
      *

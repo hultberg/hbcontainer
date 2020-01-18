@@ -24,12 +24,16 @@ namespace HbLib\Container {
         return new DefinitionReference($key);
     }
 
+    /**
+     * @param mixed $value
+     * @return DefinitionValue
+     */
     function value($value): DefinitionValue
     {
         return new DefinitionValue($value);
     }
 
-    function classNameExists($value): bool
+    function classNameExists(string $value): bool
     {
         return class_exists($value) || interface_exists($value);
     }

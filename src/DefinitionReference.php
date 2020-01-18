@@ -4,18 +4,15 @@ namespace HbLib\Container;
 
 class DefinitionReference extends AbstractDefinition
 {
-    /**
-     * @var string
-     */
-    private $entryName;
+    private string $entryName;
 
     /**
      * @inheritDoc
      */
-    public function __construct($entryName)
+    public function __construct(string $entryName)
     {
         parent::__construct();
-        
+
         $this->entryName = $entryName;
     }
 

@@ -7,15 +7,19 @@ namespace HbLib\Container;
 use function array_key_exists;
 use function count;
 
+/**
+ * Class DefinitionSource
+ * @package HbLib\Container
+ */
 class DefinitionSource implements \Countable, \IteratorAggregate
 {
     /**
-     * @var array
+     * @var array<AbstractDefinition>
      */
-    private $definitions;
+    private array $definitions;
 
     /**
-     * @param array $definitions
+     * @param array<AbstractDefinition> $definitions
      */
     public function __construct(array $definitions = [])
     {
@@ -50,13 +54,16 @@ class DefinitionSource implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @return array
+     * @return array<AbstractDefinition>
      */
     public function all(): array
     {
         return $this->definitions;
     }
 
+    /**
+     * @return int
+     */
     public function count()
     {
         return count($this->definitions);

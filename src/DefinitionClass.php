@@ -7,23 +7,20 @@ namespace HbLib\Container;
  */
 class DefinitionClass extends AbstractDefinition
 {
-    /**
-     * @var string|null
-     */
-    private $className = null;
+    private ?string $className = null;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    private $parameters;
+    private array $parameters;
 
     /**
      * @inheritDoc
      */
-    public function __construct($className = null, array $parameters = [])
+    public function __construct(?string $className = null, array $parameters = [])
     {
         parent::__construct();
-        
+
         $this->className = $className;
         $this->parameters = $parameters;
     }
@@ -41,6 +38,11 @@ class DefinitionClass extends AbstractDefinition
         return $this->parameters;
     }
 
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return $this
+     */
     public function parameter(string $key, $value)
     {
         $this->parameters[$key] = $value;

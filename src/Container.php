@@ -193,24 +193,34 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             unset($this->entriesBeingResolved[$id]);
         }
     }
-    
-    protected function setSingleton(string $id, $value)
+
+    /**
+     * @param string $id
+     * @param object|mixed $value
+     */
+    protected function setSingleton(string $id, $value): void
     {
         if (is_object($value) === true) {
             $definition = $this->definitionSource->get($id);
             $reference = new WeakReference($value);
-            
+
             if ($definition !== null && $definition->isSingletonLifetime() === true) {
                 $reference = new SingletonReference($value);
             }
-            
+
             $this->singletons[$id] = $reference;
             return;
         }
-        
+
         $this->singletons[$id] = $value;
     }
 
+    /**
+     * @param AbstractDefinition|mixed $value
+     * @param string $referencedEntryName
+     * @return mixed
+     * @throws \Exception
+     */
     private function resolveValue($value, $referencedEntryName)
     {
         if ($value instanceof AbstractDefinition) {
@@ -220,6 +230,14 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         return $value;
     }
 
+    /**
+     * @param AbstractDefinition $definition
+     * @param string $requestedId
+     * @return mixed
+     * @throws NotFoundException
+     * @throws UnresolvedContainerException
+     * @throws \ReflectionException
+     */
     private function resolveDefinition(AbstractDefinition $definition, $requestedId)
     {
         if ($definition instanceof DefinitionValue) {
