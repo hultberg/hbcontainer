@@ -45,4 +45,24 @@ abstract class CompiledContainer extends Container
 
         return parent::get($id);
     }
+
+    /**
+     * @param string $entryName
+     * @param array<string, mixed> $parameters
+     * @return mixed
+     * @throws InvokeException
+     * @throws UnresolvedContainerException
+     * @throws \ReflectionException
+     */
+    protected function resolveFactory(string $entryName, array $parameters = [])
+    {
+        $definition = $this->definitionSource->get($entryName);
+
+        if ($definition instanceof DefinitionFactory) {
+            return $this->call($definition->getClosure(), $parameters);
+        }
+
+        // Unless someone changed a definition in runtime... this will happen.
+        throw new \RuntimeException('Definition ' . $entryName . ' is not a factory');
+    }
 }
