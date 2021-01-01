@@ -7,7 +7,7 @@ namespace HbLib\Container;
 abstract class CompiledContainer extends Container
 {
     /**
-     * @var array
+     * @var array<string, string>
      */
     protected array $methodMapping;
 

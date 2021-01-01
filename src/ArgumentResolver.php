@@ -2,8 +2,6 @@
 
 namespace HbLib\Container;
 
-use Ds\Collection;
-use Ds\Map;
 use ReflectionNamedType;
 
 class ArgumentResolver implements ArgumentResolverInterface

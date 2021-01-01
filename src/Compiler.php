@@ -9,48 +9,31 @@ use function is_iterable;
 
 class Compiler
 {
-    /**
-     * @var DefinitionSource
-     */
-    private $definitions;
+    private ?DefinitionSource $definitions;
+    private string $compiledClassName;
+    private string $compiledParentClassName;
+    private ArgumentResolverInterface $argumentResolver;
+    private \SplFileInfo $fileInfo;
 
     /**
-     * @var array
+     * @var CompiledEntry[]
      */
-    private $definitionsToCompile;
+    private array $definitionsToCompile;
 
     /**
-     * @var string
+     * @var CompiledMethod[]
      */
-    private $compiledClassName;
+    private array $methods;
 
     /**
-     * @var string
+     * @var array<string, string>
      */
-    private $compiledParentClassName;
-
-    /**
-     * @var array
-     */
-    private $methods;
-
-    /**
-     * @var array
-     */
-    private $entryToMethods;
-
-    /**
-     * @var ArgumentResolverInterface|null
-     */
-    private $argumentResolver;
-
-    /**
-     * @var \SplFileInfo
-     */
-    private $fileInfo;
+    private array $entryToMethods;
 
     public function __construct(string $filePath, string $compiledClassName = 'CompiledContainer')
     {
+        $this->definitions = null;
+        $this->argumentResolver = new ArgumentResolver();
         $this->fileInfo = new \SplFileInfo($filePath);
         $this->compiledClassName = $compiledClassName;
         $this->compiledParentClassName = '\\' . CompiledContainer::class;
@@ -109,7 +92,7 @@ class Compiler
 
             $this->entryToMethods = [];
             $this->methods = [];
-            unset($this->definitions);
+            $this->definitions = null;
         }
 
         return $this->fileInfo->getPathname();
@@ -182,12 +165,15 @@ class Compiler
         return $methodName;
     }
 
+    /**
+     * @param \ReflectionFunctionAbstract $function
+     * @param array<string, mixed> $extraParameters
+     * @return array<string, mixed>
+     * @throws UnresolvedContainerException
+     * @throws \ReflectionException
+     */
     private function resolveParameters(\ReflectionFunctionAbstract $function, array $extraParameters = []): array
     {
-        if ($this->argumentResolver === null) {
-            $this->argumentResolver = new ArgumentResolver();
-        }
-
         $parameters = $this->argumentResolver->resolve($function, $extraParameters);
         $resolvedParameters = [];
 
@@ -204,7 +190,7 @@ class Compiler
             if ($typeHint !== null) {
                 $class = new \ReflectionClass($typeHint);
 
-                if ($class->isInstantiable() || $this->definitions->has($typeHint)) {
+                if ($class->isInstantiable() || $this->definitions?->has($typeHint)) {
                     $resolvedParameters[$parameter->getName()] = new DefinitionReference($typeHint);
                     continue;
                 }
@@ -218,7 +204,7 @@ class Compiler
 
             // Something is wrong... might be an interface that has no definition entry.
             // It might be set in runtime so just let the container compile it.
-            $resolvedParameters[$parameter->getName()] = new DefinitionReference($typeHint);
+            $resolvedParameters[$parameter->getName()] = new DefinitionReference((string) $typeHint);
         }
 
         return $resolvedParameters;

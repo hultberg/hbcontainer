@@ -3,7 +3,7 @@
     "description": "Lightweight container",
     "type": "library",
     "require": {
-        "php": "^7.4",
+        "php": "^8.0 <9.0",
         "psr/container": "^1.0"
     },
     "autoload": {
@@ -22,11 +22,11 @@
     ],
     "config": {
         "platform": {
-            "php": "7.4.1"
+            "php": "8.0.0"
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.0",
+        "phpunit/phpunit": "^9.0",
         "phpstan/phpstan": "^0.12.3"
     }
 }

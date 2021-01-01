@@ -27,7 +27,7 @@ class ContainerBuilder
     private $compileFilePath;
 
     /**
-     * @param array|DefinitionSource $definitions
+     * @param array<string, AbstractDefinition>|DefinitionSource $definitions
      */
     public function __construct($definitions)
     {

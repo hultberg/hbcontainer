@@ -14,6 +14,10 @@ namespace HbLib\Container {
         return new DefinitionFactory($callable);
     }
 
+    /**
+     * @param class-string|null $key
+     * @return DefinitionClass
+     */
     function resolve(string $key = null): DefinitionClass
     {
         return new DefinitionClass($key);

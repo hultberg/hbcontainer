@@ -1,5 +1,17 @@
 # Changelog
 
+## v6.0.0
+
+Support for php 8.0
+
+Internal refactoring to pass phpstan.
+
+## v5.0.0
+
+Support for php 7.4
+
+All singletons are now by default weak refs and can by the definition config set to be kept by the container lifetime.
+
 ## v4.0.0
 
 * Rewrite to use native php arrays.

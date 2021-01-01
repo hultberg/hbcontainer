@@ -4,61 +4,57 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
+use Countable;
+use IteratorAggregate;
 use function array_key_exists;
 use function count;
 
 /**
  * Class DefinitionSource
  * @package HbLib\Container
+ * @phpstan-implements IteratorAggregate<string, AbstractDefinition>
  */
-class DefinitionSource implements \Countable, \IteratorAggregate
+class DefinitionSource implements Countable, IteratorAggregate
 {
     /**
-     * @var array<AbstractDefinition>
+     * @var array<string, AbstractDefinition>
      */
     private array $definitions;
 
     /**
-     * @param array<AbstractDefinition> $definitions
+     * @param array<string, AbstractDefinition> $definitions
      */
     public function __construct(array $definitions = [])
     {
         $this->definitions = $definitions;
     }
 
-    /**
-     * @param string|mixed $id
-     * @param AbstractDefinition|mixed $value
-     */
-    public function set($id, $value): void
+    public function set(string $id, AbstractDefinition $value): void
     {
         $this->definitions[$id] = $value;
     }
 
-    /**
-     * @param string|mixed $id
-     * @return AbstractDefinition|mixed
-     */
-    public function get($id)
+    public function get(string $id): ?AbstractDefinition
     {
         return $this->definitions[$id] ?? null;
     }
 
-    /**
-     * @param string|mixed $id
-     * @return bool
-     */
-    public function has($id): bool
+    public function has(string $id): bool
     {
         return array_key_exists($id, $this->definitions);
     }
 
     /**
-     * @return array<AbstractDefinition>
+     * @return array<string, AbstractDefinition>
      */
     public function all(): array
     {
         return $this->definitions;
+    }
+
+    public function getIterator()
+    {
+        yield from $this->definitions;
     }
 
     /**
@@ -67,10 +63,5 @@ class DefinitionSource implements \Countable, \IteratorAggregate
     public function count()
     {
         return count($this->definitions);
-    }
-
-    public function getIterator()
-    {
-        yield from $this->definitions;
     }
 }

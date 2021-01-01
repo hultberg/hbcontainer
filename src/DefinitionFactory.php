@@ -29,6 +29,9 @@ class DefinitionFactory extends AbstractDefinition
         return $this->closure;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getParameters(): array
     {
         return $this->parameters;

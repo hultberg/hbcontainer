@@ -15,7 +15,10 @@ class DefinitionClass extends AbstractDefinition
     private array $parameters;
 
     /**
-     * @inheritDoc
+     * DefinitionClass constructor.
+     * @phpstan-param class-string|null $className
+     * @param string|null $className
+     * @param array<string, mixed> $parameters
      */
     public function __construct(?string $className = null, array $parameters = [])
     {
@@ -33,17 +36,15 @@ class DefinitionClass extends AbstractDefinition
         return $this->className;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getParameters(): array
     {
         return $this->parameters;
     }
 
-    /**
-     * @param string $key
-     * @param mixed $value
-     * @return $this
-     */
-    public function parameter(string $key, $value)
+    public function parameter(string $key, mixed $value): static
     {
         $this->parameters[$key] = $value;
         return $this;

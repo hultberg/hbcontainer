@@ -8,7 +8,7 @@ interface ArgumentResolverInterface
      * Resolve parameters of a reflection function.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param array $arguments
+     * @param array<string, mixed> $arguments
      *
      * @return Argument[]
      *

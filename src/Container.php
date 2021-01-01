@@ -2,6 +2,7 @@
 
 namespace HbLib\Container;
 
+use function array_values;
 use function count;
 use function function_exists;
 use function is_array;
@@ -15,6 +16,7 @@ use Psr\Container\NotFoundExceptionInterface;
 class Container implements ContainerInterface, FactoryInterface, InvokerInterface
 {
     /**
+     * @phpstan-var array<string, ObjectReference|mixed>
      * @var ObjectReference[]|mixed[]
      */
     protected array $singletons;
@@ -25,6 +27,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     protected DefinitionSource $definitionSource;
 
     /**
+     * @phpstan-var array<string, bool>
      * @var array
      */
     protected array $entriesBeingResolved;
@@ -94,7 +97,9 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     /**
      * Call the given function using the given parameters.
      *
+     * @phpstan-param callable|array{class-string|object, string}|string|\Closure $callable
      * @param callable|array|string|\Closure $callable Function to call.
+     * @phpstan-param array<string, mixed> $parameters
      * @param array $parameters Parameters to use.
      *
      * @return mixed Result of the function.
@@ -158,7 +163,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * @see get()
      *
      * @param string $id
-     * @param array  $parameters
+     * @param array<string, mixed> $parameters
      *
      * @return mixed
      *
@@ -177,15 +182,6 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
         try {
             if ($definition instanceof AbstractDefinition) {
                 return $this->resolveDefinition($definition, $id);
-            }
-
-            if (is_callable($definition)) {
-                return $this->call($definition);
-            }
-
-            if ($definition !== null) {
-                // Return whatever...
-                return $definition;
             }
 
             return $this->resolveClass($id, $parameters);
@@ -275,7 +271,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      * Construct a class instance and resolve all parameters not provided in the parameters array.
      *
      * @param string $className
-     * @param array  $parameters
+     * @param array<string, mixed> $parameters
      * @return mixed
      */
     private function resolveClass(string $className, array $parameters = [])
@@ -300,16 +296,16 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             return new $className(); // No constructor.
         }
 
-        return $reflection->newInstanceArgs($this->resolveArguments($constructor, $parameters));
+        return $reflection->newInstanceArgs(array_values($this->resolveArguments($constructor, $parameters)));
     }
 
     /**
      * Resolve parameters of a reflection function.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param array $arguments
+     * @param array<string, mixed> $arguments
      *
-     * @return array
+     * @return array<string, mixed>
      *
      * @throws UnresolvedContainerException
      */
