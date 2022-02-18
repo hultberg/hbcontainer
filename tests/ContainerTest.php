@@ -10,6 +10,8 @@ use HbLib\Container\Container;
 use HbLib\Container\InvokeException;
 use HbLib\Container\UnresolvedContainerException;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
+
 use function HbLib\Container\factory;
 use function HbLib\Container\resolve;
 use function HbLib\Container\reference;
@@ -20,7 +22,7 @@ class ContainerTest extends TestCase
     public function testGet()
     {
         $container = new Container(new DefinitionSource([
-            'key' => 'value',
+            'key' => value('value'),
         ]));
         self::assertEquals('value', $container->get('key'));
     }
@@ -28,7 +30,7 @@ class ContainerTest extends TestCase
     public function testReferenceToNonClass()
     {
         $container = new Container(new DefinitionSource([
-            'key' => 'value',
+            'key' => value('value'),
             'someKey' => reference('key'),
         ]));
 
@@ -47,7 +49,7 @@ class ContainerTest extends TestCase
     public function testValueAnotherDefinition()
     {
         $container = new Container(new DefinitionSource([
-            'key' => 'value',
+            'key' => value('value'),
             'someKey' => value(reference('key')),
         ]));
 
@@ -73,23 +75,23 @@ class ContainerTest extends TestCase
     public function testGetPreviousFactory()
     {
         $container = new Container(new DefinitionSource([
-            'key' => function() { return 12; },
+            'key' => factory(function() { return 12; }),
         ]));
         self::assertEquals(12, $container->get('key'));
     }
 
-    public function testGetNonDefinitions()
+    public function testGetValues()
     {
         $container = new Container(new DefinitionSource([
-            'hei' => 'lol',
-            'heisann' => function() {
+            'hei' => value('lol'),
+            'heisann' => factory(function() {
                 return 'null';
-            },
-            'lol2' => false,
-            'qs' => true,
-            'qs2' => 0,
-            'qs3' => 1,
-            'qs4' => '',
+            }),
+            'lol2' => value(false),
+            'qs' => value(true),
+            'qs2' => value(0),
+            'qs3' => value(1),
+            'qs4' => value(''),
         ]));
 
         self::assertSame('lol', $container->get('hei'));
@@ -286,8 +288,8 @@ class ContainerTest extends TestCase
 
     public function testCallNotInvokeable()
     {
-        $this->expectException(InvokeException::class);
-        $this->expectExceptionMessage('Unable to invoke non-object instance.');
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessage('Class "1" does not exist');
 
         $container = new Container();
 
@@ -342,7 +344,7 @@ class ContainerTest extends TestCase
     public function testMakeNonExistingClass()
     {
         $this->expectException(NotFoundExceptionInterface::class);
-        $this->expectExceptionMessage('Class SomeClassThatDoNotExists does not exist');
+        $this->expectExceptionMessage('Class "SomeClassThatDoNotExists" does not exist');
 
         $container = new Container();
         $container->make('SomeClassThatDoNotExists');

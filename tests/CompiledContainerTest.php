@@ -193,15 +193,15 @@ class CompiledContainerTest extends TestCase
     public function testCompileNonDefinitions()
     {
         $containerBuilder = new ContainerBuilder(new DefinitionSource([
-            'hei' => 'lol',
-            'heisann' => function() {
+            'hei' => value('lol'),
+            'heisann' => factory(function() {
                 return 'null';
-            },
-            'lol2' => false,
-            'qs' => true,
-            'qs2' => 0,
-            'qs3' => 1,
-            'qs4' => '',
+            }),
+            'lol2' => value(false),
+            'qs' => value(true),
+            'qs2' => value(0),
+            'qs3' => value(1),
+            'qs4' => value(''),
         ]));
         $containerBuilder->enableCompiling($this->createTempFile(), $this->getUniqueClassName());
         $container = $containerBuilder->build();

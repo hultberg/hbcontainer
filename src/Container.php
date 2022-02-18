@@ -111,8 +111,16 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     public function call($callable, array $parameters = [])
     {
         if (is_array($callable)) {
-            list($class, $method) = $callable;
-            $classInstance = null;
+            [$class, $method] = $callable;
+
+            // $this->make() has already verified if class exists when its a string.
+            $reflectionClass = new \ReflectionClass(is_scalar($class) ? (string) $class : $class);
+
+            try {
+                $method = $reflectionClass->getMethod($method);
+            } catch (\ReflectionException $e) {
+                throw new InvokeException('Method ' . $method . ' does not exist on class', 0, $e);
+            }
 
             if (is_string($class)) {
                 $classInstance = $this->get($class);
@@ -122,13 +130,10 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
                 throw new InvokeException('Unable to invoke non-object instance.');
             }
 
-            // $this->make() has already verified if class exists when its a string.
-            $reflectionClass = new \ReflectionClass($class);
-
-            try {
-                $method = $reflectionClass->getMethod($method);
-            } catch (\ReflectionException $e) {
-                throw new InvokeException('Method ' . $method . ' does not exist on class', 0, $e);
+            // invokeArgs expects a object or null
+            // $this->call does not support calling static methods since we always resolve the class reference.
+            if (is_object($classInstance) === false) {
+                throw new InvokeException('Unable to resolve class instance');
             }
 
             return $method->invokeArgs($classInstance, $this->resolveArguments($method, $parameters));

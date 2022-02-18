@@ -1,7 +1,27 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#1 \\$function of class ReflectionFunction constructor expects Closure\\|string, \\(callable\\(\\)\\: mixed\\)\\|string given\\.$#"
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$compiledClassName is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
+		-
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$compiledParentClassName is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
+		-
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$methods is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
+		-
+			message: "#^Parameter \\#1 \\$function of class ReflectionFunction constructor expects Closure\\|string, callable\\(\\)\\: mixed given\\.$#"
 			count: 1
 			path: src/Container.php
+
+		-
+			message: "#^Method HbLib\\\\Container\\\\ContainerBuilder\\:\\:build\\(\\) should return HbLib\\\\Container\\\\Container but returns object\\.$#"
+			count: 1
+			path: src/ContainerBuilder.php
 

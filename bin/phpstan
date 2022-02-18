@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-
-set -e
-
-vendor/bin/phpstan analyse "$@"
-

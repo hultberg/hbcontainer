@@ -5,9 +5,6 @@ parameters:
 	excludes_analyse:
 		- %currentWorkingDirectory%/src/compiled_template.php
 	ignoreErrors:
-		- '#PHPDoc tag \@throws with type Psr\\Container\\ContainerExceptionInterface is not subtype of Throwable#'
-		- '#PHPDoc tag \@throws with type HbLib\\Container\\UnresolvedContainerException\|Psr\\Container\\NotFoundExceptionInterface is not subtype of Throwable#'
 		- '#class-string<T of object>\|T of object#'
-		- '#class-string<object>\|object, object\|string#'
 includes:
     - ./phpstan-baseline.neon
