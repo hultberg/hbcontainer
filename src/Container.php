@@ -49,7 +49,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
 
         $this->argumentResolver = $argumentResolver ?? new ArgumentResolver();
 
-        $argumentResolverClassName = get_class($this->argumentResolver);
+        $argumentResolverClassName = $this->argumentResolver::class;
         $this->definitionSource->set($argumentResolverClassName, new DefinitionValue($this->argumentResolver));
         $this->definitionSource->set(ArgumentResolverInterface::class, new DefinitionReference($argumentResolverClassName));
 
