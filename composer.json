@@ -22,7 +22,6 @@
     ],
     "config": {
         "platform": {
-            "php": "8.0.0"
         }
     },
     "require-dev": {
