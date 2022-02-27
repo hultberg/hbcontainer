@@ -2,7 +2,7 @@ parameters:
 	paths:
 		- src/
 	level: max
-	excludes_analyse:
+	excludePaths:
 		- %currentWorkingDirectory%/src/compiled_template.php
 	ignoreErrors:
 		- '#class-string<T of object>\|T of object#'
