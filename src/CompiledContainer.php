@@ -26,7 +26,7 @@ abstract class CompiledContainer extends Container
     /**
      * @inheritDoc
      */
-    public function get($id)
+    public function get(string $id): mixed
     {
         // Have we resolved the ID before?
         if (isset($this->singletons[$id]) === false) {

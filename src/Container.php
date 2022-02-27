@@ -69,7 +69,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      *
      * @return mixed Entry.
      */
-    public function get($id)
+    public function get(string $id): mixed
     {
         if (isset($this->singletons[$id]) === true) {
             $singletonValue = $this->singletons[$id];
@@ -364,7 +364,7 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      *
      * @return bool
      */
-    public function has($id)
+    public function has(string $id): bool
     {
         return $this->definitionSource->has($id);
     }
