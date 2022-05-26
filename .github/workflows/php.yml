@@ -1,0 +1,74 @@
+name: phpstan and phpunit
+
+on: [push]
+
+jobs:
+  php80:
+    name: php 8.0
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
+      - name: Cache composer dependencies
+        id: cache-composer
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: composer-php80-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ steps.date.outputs.date }}
+
+      - name: Install composer dependencies
+        if: ${{ steps.cache-composer.outputs.cache-hit == false }}
+        run: docker run --rm -v $(pwd):/app -w /app composer:2 composer install --no-progress --no-interaction
+
+      - name: Run phpstan
+        run: docker run --rm -v $(pwd):/app -w /app php:8.0-cli vendor/bin/phpstan --no-progress --no-interaction
+
+      - name: Run phpunit
+        run: docker run --rm -v $(pwd):/app -w /app php:8.0-cli vendor/bin/phpunit --do-not-cache-result --no-interaction
+
+  php81:
+    name: php 8.1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
+      - name: Cache composer dependencies
+        id: cache-composer
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: composer-php81-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ steps.date.outputs.date }}
+
+      - name: Install composer dependencies
+        if: ${{ steps.cache-composer.outputs.cache-hit == false }}
+        run: docker run --rm -v $(pwd):/app -w /app composer:2 composer install --no-progress --no-interaction
+
+      - name: Run phpstan
+        run: docker run --rm -v $(pwd):/app -w /app php:8.1-cli vendor/bin/phpstan --no-progress --no-interaction
+
+      - name: Run phpunit
+        run: docker run --rm -v $(pwd):/app -w /app php:8.1-cli vendor/bin/phpunit --do-not-cache-result --no-interaction
