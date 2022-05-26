@@ -8,7 +8,9 @@ use HbLib\Container\CircularDependencyException;
 use Psr\Container\NotFoundExceptionInterface;
 use HbLib\Container\Container;
 use HbLib\Container\InvokeException;
+use HbLib\Container\SingletonReference;
 use HbLib\Container\UnresolvedContainerException;
+use HbLib\Container\WeakReference;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 
@@ -450,6 +452,53 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(Session::class, $container->get(Session::class));
         self::assertNull($container->get(Session::class)->bag);
     }
+
+    public function testResolveReferenceForLifetime()
+    {
+        $container = new Container(new DefinitionSource([
+            'concrete' => resolve(Class1::class)->asSingleton(),
+            'reference1' => reference('concrete'),
+            'reference2' => reference('reference1'),
+        ]));
+
+        self::assertInstanceOf(Class1::class, $container->get('concrete'));
+        self::assertInstanceOf(Class1::class, $container->get('reference1'));
+        self::assertInstanceOf(Class1::class, $container->get('reference2'));
+
+        $containerReflection = new \ReflectionClass($container::class);
+        $singletonsProperty = $containerReflection->getProperty('singletons');
+        $singletonsProperty->setAccessible(true);
+
+        $singletonsArray = $singletonsProperty->getValue($container);
+
+        self::assertInstanceOf(SingletonReference::class, $singletonsArray['concrete']);
+        self::assertInstanceOf(SingletonReference::class, $singletonsArray['reference1']);
+        self::assertInstanceOf(SingletonReference::class, $singletonsArray['reference2']);
+    }
+
+    public function testResolveReferenceLifetimeIgnored()
+    {
+        $container = new Container(new DefinitionSource([
+            'concrete' => resolve(Class1::class),
+            'reference1' => reference('concrete')->asSingleton(),
+            'reference2' => reference('reference1')->asSingleton(),
+        ]));
+
+        self::assertInstanceOf(Class1::class, $container->get('concrete'));
+        self::assertInstanceOf(Class1::class, $container->get('reference1'));
+        self::assertInstanceOf(Class1::class, $container->get('reference2'));
+
+        $containerReflection = new \ReflectionClass($container::class);
+        $singletonsProperty = $containerReflection->getProperty('singletons');
+        $singletonsProperty->setAccessible(true);
+
+        $singletonsArray = $singletonsProperty->getValue($container);
+
+        self::assertInstanceOf(WeakReference::class, $singletonsArray['concrete']);
+        self::assertInstanceOf(WeakReference::class, $singletonsArray['reference1']);
+        self::assertInstanceOf(WeakReference::class, $singletonsArray['reference2']);
+    }
+
 }
 
 class Circular1 {

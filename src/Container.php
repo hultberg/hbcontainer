@@ -203,10 +203,15 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
     {
         if (is_object($value) === true) {
             $definition = $this->definitionSource->get($id);
-            $reference = new WeakReference($value);
+
+            if ($definition instanceof DefinitionReference) {
+                $definition = $this->definitionSource->resolveReference($definition);
+            }
 
             if ($definition !== null && $definition->isSingletonLifetime() === true) {
                 $reference = new SingletonReference($value);
+            } else {
+                $reference = new WeakReference($value);
             }
 
             $this->singletons[$id] = $reference;

@@ -64,4 +64,13 @@ class DefinitionSource implements Countable, IteratorAggregate
     {
         return count($this->definitions);
     }
+
+    public function resolveReference(DefinitionReference $definition): ?AbstractDefinition
+    {
+        do {
+            $definition = $this->get($definition->getEntryName());
+        } while ($definition instanceof DefinitionReference);
+
+        return $definition;
+    }
 }
