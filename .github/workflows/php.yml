@@ -8,8 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,7 +25,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: vendor
-          key: composer-php80-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ steps.date.outputs.date }}
+          key: composer-php80-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ env.current_date }}
 
       - name: Install composer dependencies
         if: ${{ steps.cache-composer.outputs.cache-hit == false }}
@@ -43,8 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -61,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: vendor
-          key: composer-php81-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ steps.date.outputs.date }}
+          key: composer-php81-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ env.current_date }}
 
       - name: Install composer dependencies
         if: ${{ steps.cache-composer.outputs.cache-hit == false }}
@@ -78,8 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -96,7 +93,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: vendor
-          key: composer-php82-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ steps.date.outputs.date }}
+          key: composer-php82-${{ github.ref_name }}-${{ hashFiles('composer.json') }}-${{ env.current_date }}
 
       - name: Install composer dependencies
         if: ${{ steps.cache-composer.outputs.cache-hit == false }}
