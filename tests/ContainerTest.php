@@ -342,7 +342,7 @@ class ContainerTest extends TestCase
     public function testMakeNonExistingClass()
     {
         $this->expectException(NotFoundExceptionInterface::class);
-        $this->expectExceptionMessage('Class SomeClassThatDoNotExists does not exist');
+        $this->expectExceptionMessageMatches('/Class \"?SomeClassThatDoNotExists\"? does not exist/');
 
         $container = new Container();
         $container->make('SomeClassThatDoNotExists');
