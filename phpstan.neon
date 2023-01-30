@@ -4,3 +4,5 @@ parameters:
 	level: 5
 	excludePaths:
 		- %currentWorkingDirectory%/src/compiled_template.php
+includes:
+	- ./phpstan-baseline.neon
