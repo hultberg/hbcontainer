@@ -3,7 +3,7 @@
     "description": "Lightweight container",
     "type": "library",
     "require": {
-        "php": "^7.4",
+        "php": "^7.4 || ^8.0 <8.3",
         "psr/container": "^1.0"
     },
     "autoload": {
