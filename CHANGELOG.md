@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.0.1
+
+* Internal build changes
+* Fix `Fatal error: During inheritance of Countable: Uncaught Return type of HbLib\Container\DefinitionSource::count() should either be compatible with Countable::count()`
+
+## v5.0.0
+
+* Support for php 7.4
+* All singletons are now by default weak refs and can by the definition config set to be kept by the container lifetime.
+* Improve strictness of internal code, fixing errors found by phpstan.
+* ContainerBuilder::build return type changed to Container from CompiledContainer
+
 ## v4.0.0
 
 * Rewrite to use native php arrays.
