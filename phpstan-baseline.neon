@@ -1,0 +1,17 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$compiledClassName is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
+		-
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$compiledParentClassName is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
+		-
+			message: "#^Property HbLib\\\\Container\\\\Compiler\\:\\:\\$methods is never read, only written\\.$#"
+			count: 1
+			path: src/Compiler.php
+
