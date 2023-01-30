@@ -64,12 +64,12 @@ class DefinitionSource implements \Countable, \IteratorAggregate
     /**
      * @return int
      */
-    public function count()
+    public function count(): int
     {
-        return count($this->definitions);
+        return \count($this->definitions);
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         yield from $this->definitions;
     }
