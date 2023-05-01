@@ -1,8 +1,6 @@
 # HbContainer
 
-[![Build Status](https://travis-ci.org/hultberg/hbcontainer.svg?branch=master)](https://travis-ci.org/hultberg/hbcontainer)
-
-A PSR-11 lightweight dependency injection container for all types of projects. Supports php 7.1 and newer.
+A PSR-11 lightweight dependency injection container for all types of projects. Supports php 8.0 and newer.
 
 ## Installation
 
@@ -13,7 +11,7 @@ composer require edvin/hbcontainer
 
 ## Resolving
 
-HbContainer uses `definitions` to define entries to be resolved by the container. The container can resolve any class that can be constructed with resolvable dependencies on its own.
+HbContainer uses `definitions` to define entries to be resolved by the container. The container can resolve any class that can be constructed with resolvable dependencies on its own. Resolved definitions are by default stored as weak references and can be set as singletons which will use a normal reference.
 
 ## Getting entries
 
