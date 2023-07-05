@@ -80,15 +80,28 @@ class Compiler
             // Prepend the php start tag... so php can parse it later since its a class.
             $fileContent = '<?php' . PHP_EOL . $fileContent;
 
-            $fileObj = $this->fileInfo->openFile('w');
-            $fileObj->fwrite($fileContent);
-            unset($fileObj); // Release the file pointer.
+            $tempFile = tempnam(sys_get_temp_dir(), $this->fileInfo->getFilename());
+            if (!is_string($tempFile)) {
+                throw new \RuntimeException('Failed to create temp file in configured temp dir');
+            }
 
+            // put into the temp file with put contents
+            file_put_contents($tempFile, $fileContent);
+
+            // chmod before renaming
             // chmod the created compiled container adding the umask of the current runtime.
             // example: (umask=002) is 436 (664 in oct)
             // example: (umask=0022) is 420 (644 in oct)
             // TODO: unsilence the chmod and report the error.
-            @chmod($this->fileInfo->getPathname(), 0666 & ~umask());
+            @chmod($tempFile, 0666 & ~umask());
+
+            // rename the temp file into the proper location
+            // this ensures no partial file is picked up by
+            // other processes
+            rename($tempFile, $this->fileInfo->getPathname());
+
+            // Clear the stat cache since we have created the file
+            clearstatcache();
 
             $this->entryToMethods = [];
             $this->methods = [];
