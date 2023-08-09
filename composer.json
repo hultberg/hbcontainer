@@ -24,6 +24,18 @@
         "platform": {
         }
     },
+    "archive": {
+      "exclude": [
+        ".github/",
+        "tests/",
+        "bin/",
+        ".gitattributes",
+        ".editorconfig",
+        "phpunit.xml",
+        "phpstan.neon",
+        "phpstan-baseline.neon"
+      ]
+    },
     "require-dev": {
         "phpunit/phpunit": "^9.0",
         "phpstan/phpstan": "^1.4.0"
