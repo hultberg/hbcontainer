@@ -6,18 +6,18 @@
  */
 ?>
 
-final class <?php echo ltrim($this->compiledClassName, '\\'); ?> extends <?php echo $this->compiledParentClassName; ?>
+final class <?=ltrim($this->compiledClassName, '\\')?> extends <?=$this->compiledParentClassName?>
 {
     protected function _initialize(): void {
         parent::_initialize();
 
-        $this->methodMapping = <?php var_export($this->entryToMethods); ?>;
+        $this->methodMapping = <?=var_export($this->entryToMethods, true)?>;
     }
 
 <?php foreach ($this->methods as $method): ?>
-    protected function <?php echo $method->getName(); ?>()
+    protected function <?=$method->getName()?>(): <?=$method->getReturnType()?>
     {
-        <?php echo $method->getContent(); ?>
+        <?=$method->getContent()?>
 
     }
 

@@ -8,40 +8,24 @@ namespace HbLib\Container;
 
 class CompiledMethod
 {
-    /**
-     * @var string
-     */
-    private $name;
+    public function __construct(
+        private string $name,
+        private string $content,
+        private string $returnType = 'mixed',
+    ) { }
 
-    /**
-     * @var string
-     */
-    private $content;
-
-    /**
-     * CompiledMethod constructor.
-     * @param string $name
-     * @param string $content
-     */
-    public function __construct(string $name, string $content)
-    {
-        $this->name = $name;
-        $this->content = $content;
-    }
-
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
     public function getContent(): string
     {
         return $this->content;
+    }
+
+    public function getReturnType(): string
+    {
+        return $this->returnType;
     }
 }
