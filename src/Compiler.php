@@ -8,11 +8,14 @@ use Laravel\SerializableClosure\Support\ReflectionClosure;
 
 use function array_map;
 use function count;
+use function hash;
 use function implode;
 use function is_iterable;
 use function mb_substr;
 use function ob_get_clean;
 use function ob_start;
+use function random_bytes;
+use function sha1;
 use function str_replace;
 use function strpos;
 use function strrpos;
@@ -41,9 +44,8 @@ class Compiler
      */
     private array $entryToMethods;
 
-    public function __construct(
-        private string $compiledClassName = 'CompiledContainer'
-    ) {
+    public function __construct()
+    {
         $this->argumentResolver = new ArgumentResolver();
         $this->compiledParentClassName = '\\' . CompiledContainer::class;
     }
@@ -84,6 +86,8 @@ class Compiler
             // All other values in the container is left alone is resolved via
             // the base container class instance.
         }
+
+        $compiledClassName = '\HbCompiledContainer' . sha1(random_bytes(8));
 
         // Render the template.
         ob_start();

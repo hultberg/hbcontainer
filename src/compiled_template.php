@@ -6,7 +6,7 @@
  */
 ?>
 
-final class <?=ltrim($this->compiledClassName, '\\')?> extends <?=$this->compiledParentClassName?>
+final class <?=ltrim($compiledClassName, '\\')?> extends <?=$this->compiledParentClassName?>
 {
     protected function _initialize(): void {
         parent::_initialize();
@@ -24,3 +24,5 @@ final class <?=ltrim($this->compiledClassName, '\\')?> extends <?=$this->compile
 <?php endforeach; ?>
 
 }
+
+return <?=$compiledClassName?>::class;

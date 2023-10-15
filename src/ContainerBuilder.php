@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace HbLib\Container;
 
+use Psr\Log\LoggerInterface;
+
 use function basename;
 use function chmod;
+use function class_exists;
 use function clearstatcache;
 use function dirname;
+use function file_get_contents;
 use function file_put_contents;
 use function filter_var;
 use function function_exists;
@@ -24,16 +28,16 @@ use function umask;
 class ContainerBuilder
 {
     private DefinitionSource $definitions;
-    private string|null $compiledContainerClassName;
     private bool $enableCompiling;
     private string|null $compileFilePath;
 
     /**
      * @param array<string, AbstractDefinition>|DefinitionSource $definitions
      */
-    public function __construct($definitions)
-    {
-        $this->compiledContainerClassName = null;
+    public function __construct(
+        array|DefinitionSource $definitions,
+        private LoggerInterface|null $logger = null,
+    ) {
         $this->enableCompiling = false;
         $this->compileFilePath = null;
 
@@ -41,15 +45,12 @@ class ContainerBuilder
         $this->definitions = $definitions instanceof DefinitionSource ? $definitions : new DefinitionSource($definitions);
     }
 
-    public function enableCompiling(string|null $filePath = null, string|null $className = null): void
+    public function enableCompiling(string|null $filePath = null): void
     {
         $this->enableCompiling = true;
 
         // A nice default below, put it in the configured temp folder.
         $this->compileFilePath = $filePath ?? sys_get_temp_dir() . '/CompiledContainer.php';
-
-        // The default CompiledContainer class. It is in the global namespace.
-        $this->compiledContainerClassName = $className ?? '\CompiledContainer';
     }
 
     public function writeCompiled(): void
@@ -62,10 +63,6 @@ class ContainerBuilder
             throw new \RuntimeException('No compile file path is defined');
         }
 
-        if ($this->compiledContainerClassName === null) {
-            throw new \RuntimeException('No compile container class name is defined');
-        }
-
         $targetDir = dirname($this->compileFilePath);
         if (!is_dir($targetDir) || !is_writable($targetDir)) {
             throw new \RuntimeException('Directory of compiled file path ' . $targetDir . ' is not writable');
@@ -76,7 +73,7 @@ class ContainerBuilder
             throw new \RuntimeException('Failed to create temp file in configured temp dir');
         }
 
-        $compiler = new Compiler($this->compiledContainerClassName);
+        $compiler = new Compiler();
         $fileContent = $compiler->compile($this->definitions);
 
         // put into the temp file with put contents
@@ -111,10 +108,16 @@ class ContainerBuilder
         // Compiling is enabled, lets go.
         if ($this->enableCompiling
             && $this->compileFilePath !== null
-            && $this->compiledContainerClassName !== null
             && is_file($this->compileFilePath)) {
-            require $this->compileFilePath;
-            $containerClass = $this->compiledContainerClassName;
+            $className = require $this->compileFilePath;
+
+            if (class_exists($className, false)) {
+                // only use the compiled container if it was loaded
+                $containerClass = $className;
+            } else if ($this->logger !== null) {
+                $e = new \RuntimeException('Failed to load compiled container from file ' . $this->compileFilePath);
+                $this->logger->error($e->getMessage(), ['exception' => $e]);
+            }
         }
 
         return new $containerClass($this->definitions);
