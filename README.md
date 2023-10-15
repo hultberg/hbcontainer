@@ -113,10 +113,44 @@ $container->has('hello'); // => true
 
 ## Compiling
 
-The container supports compiling all resolved definitions in runtime to increase performance. The advantage of this in production environments is that the container does not need to look up all parameters everytime, but rather has all definitions and their dependencies resolved in one file.
+The container supports compiling all resolved definitions to increase performance. The advantage of this in production environments is that the container does not need to look up all parameters everytime, but rather has all definitions and their dependencies resolved in one file.
 
-### Limitations
+### How to
 
-Only definition types are compiled into the resulting file, all other entries are just resolved from the definition source.
+Compiling must be enabled on ContainerBuilder and some script must call writeCompiled:
 
-Closures are not included in the compiled container and is resolved and called in runtime with the definition entry ID.
+Somewhere in your web app:
+```php
+<?php
+
+//...
+$builder = new \HbLib\Container\ContainerBuilder(new \HbLib\Container\DefinitionSource([
+    //...
+]));
+
+$filePath = sys_get_temp_dir() . '/CompiledContainer.php';
+$builder->enableCompiling($filePath); // important step
+
+if (!is_file($filePath)) {
+    $builder->writeCompiled();
+}
+
+$container = $builder->build();
+```
+
+I do recommend that the `ContainerBuilder::writeCompiled` call is performed in a separate cli command so that errors
+does not affect your clients.
+
+```php
+<?php
+// compile_container.php
+
+// load build just like you would in web app:
+$builder = new \HbLib\Container\ContainerBuilder(new \HbLib\Container\DefinitionSource([
+    //...
+]));
+
+$filePath = sys_get_temp_dir() . '/CompiledContainer.php';
+$builder->enableCompiling($filePath); // important step
+$builder->writeCompiled();
+```
