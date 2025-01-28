@@ -11,8 +11,10 @@ abstract class CompiledContainer extends Container
      */
     protected array $methodMapping;
 
-    public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
-    {
+    public function __construct(
+        DefinitionSource|null $definitionSource = null,
+        ArgumentResolverInterface|null $argumentResolver = null,
+    ) {
         parent::__construct($definitionSource, $argumentResolver);
 
         $this->_initialize();

@@ -18,7 +18,7 @@ namespace HbLib\Container {
      * @param class-string|null $key
      * @return DefinitionClass
      */
-    function resolve(string $key = null): DefinitionClass
+    function resolve(string|null $key = null): DefinitionClass
     {
         return new DefinitionClass($key);
     }

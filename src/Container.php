@@ -37,8 +37,10 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
      */
     private ArgumentResolverInterface $argumentResolver;
 
-    public function __construct(DefinitionSource $definitionSource = null, ArgumentResolverInterface $argumentResolver = null)
-    {
+    public function __construct(
+        DefinitionSource|null $definitionSource = null,
+        ArgumentResolverInterface|null $argumentResolver = null,
+    ) {
         $this->singletons = [];
         $this->entriesBeingResolved = [];
 

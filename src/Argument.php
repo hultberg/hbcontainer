@@ -51,7 +51,7 @@ class Argument
      */
     public function __construct(
         string $name,
-        string $typeHintClassName = null,
+        string|null $typeHintClassName = null,
         bool $isOptional = false,
         $defaultValue = null
     ) {
