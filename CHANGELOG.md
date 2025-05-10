@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.2.0
+
+Support for PHP 8.4
+
+Refactoring in compiled container, added support for closures.
+
 ## v6.0.0
 
 Support for php 8.0
