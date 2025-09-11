@@ -272,7 +272,7 @@ interface InterfaceSessionBagCompiled {}
 class SessionClass {
     public $bag;
 
-    function __construct(InterfaceSessionBagCompiled $bag = null) {
+    function __construct(null|InterfaceSessionBagCompiled $bag = null) {
         $this->bag = $bag;
     }
 }

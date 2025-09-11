@@ -360,7 +360,15 @@ class ContainerTest extends TestCase
 
         $container = new Container();
         $container->make(AbstractClass1::class);
-        self::assertFalse(true);
+    }
+
+    public function testMakeEnum()
+    {
+        $this->expectException(UnresolvedContainerException::class);
+        $this->expectExceptionMessage('Cant create an instance of an enum.');
+
+        $container = new Container();
+        $container->make(MyEnum::class);
     }
 
     public function testMakeInterface()
@@ -542,7 +550,7 @@ interface InterfaceSessionBag {}
 class Session {
     public $bag;
 
-    function __construct(InterfaceSessionBag $bag = null) {
+    function __construct(null|InterfaceSessionBag $bag = null) {
         $this->bag = $bag;
     }
 }

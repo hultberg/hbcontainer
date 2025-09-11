@@ -304,6 +304,10 @@ class Container implements ContainerInterface, FactoryInterface, InvokerInterfac
             throw new UnresolvedContainerException('Cant create an instance of an abstract class.');
         }
 
+        if ($reflection->isEnum()) {
+            throw new UnresolvedContainerException('Cant create an instance of an enum.');
+        }
+
         if ($constructor === null) {
             return new $className(); // No constructor.
         }
