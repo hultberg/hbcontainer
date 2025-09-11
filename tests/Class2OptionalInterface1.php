@@ -6,7 +6,7 @@ class Class2OptionalInterface1
 {
     public $interface;
     
-    public function __construct(Interface1 $interface = null)
+    public function __construct(null|Interface1 $interface = null)
     {
         $this->interface = $interface;
     }
