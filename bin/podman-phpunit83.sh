@@ -8,5 +8,5 @@ podman run \
   --rm \
   --volume ./:/app \
   --workdir /app \
-  docker.io/library/php:8.1-cli \
-  vendor/bin/phpstan analyse "$@"
+  docker.io/library/php:8.3-cli \
+  vendor/bin/phpunit "$@"
